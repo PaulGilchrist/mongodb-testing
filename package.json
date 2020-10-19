@@ -1,0 +1,14 @@
+{
+  "name": "mongodb-testing",
+  "version": "1.0.0",
+  "description": "Test of MongoDB",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Paul Gilchrist",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^3.6.2"
+  }
+}
