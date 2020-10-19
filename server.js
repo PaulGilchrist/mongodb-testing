@@ -1,6 +1,8 @@
 
 // https://www.w3schools.com/nodejs/nodejs_mongodb.asp
-// docker run -d -p 27017:27017 --name my_database mongo:latest 
+// docker run -d -p 27017:27017 -v c/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
+// docker stop mongo-testing-db
+// docker start mongo-testing-db
 // docker rm -f <containerID>
 const MongoClient = require('mongodb').MongoClient;
 
