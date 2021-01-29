@@ -4,24 +4,25 @@
 // docker stop mongo-testing-db
 // docker start mongo-testing-db
 // docker rm -f <containerID>
+
+const chalk = require('chalk');
+const fs = require('fs');
 const MongoClient = require('mongodb').MongoClient;
+const util = require('util');
 
 const throwError = (err, client) => {
     client.close();
     throw err;
 }
 
-// Create or connect to database
-const collectionName = "customers";
+// Global variables
+const collectionName = 'continents';
+const documentsFileName = 'documents.json';
 const dbName = 'my_database';
-let document = { name: "Company Inc", address: "Highway 37" };
 const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const query1 = { address: 'Highway 37' };
-const query2 = { address: "Canyon 123" };
-const updateValues = { $set: { name: "Mickey", address: "Canyon 123" } };
 const url = 'mongodb://localhost:27017/'; // default mongo port
 
 const createDatabase = async (url, mongoClientOptions) => {
@@ -59,55 +60,98 @@ const main = async () => {
     try {
         // Create or connect to database
         client = await createDatabase(url, mongoClientOptions);
-        console.log("Database connected");
+        console.log(chalk.cyan("Database connected"));
         const db = client.db(dbName);
         // Create or connect to collection
         await createCollection(db, collectionName);
-        console.log("Collection created");
+        console.log(chalk.cyan("Collection created"));
         // Insert document
-        await db.collection(collectionName).insertOne(document);
-        console.log("Document inserted");
-        console.log(document);
-        // Find first document since empty query object is passed
-        let result = await db.collection(collectionName).findOne({});
-        if (result) {
-            console.log(`Document found - findOne - empty query`);
-            console.log(result);
-        } else {
-            console.log(`Document not found - findOne`);
-        }
+        const documentsJson = fs.readFileSync(documentsFileName);
+        const documents = JSON.parse(documentsJson);
+        await db.collection(collectionName).insertMany(documents);
+        console.log(chalk.cyan("Documents inserted - Below is the full document"));
+        console.log(util.inspect(documents, false, null, true /* enable colors */));
         // Find documents
         // Could optionally sort({ name: 1 }) between find() and toArray()
         // Could optionally limit(5) between find() and toArray()
         // Could also join collections together.  See...https://www.w3schools.com/nodejs/nodejs_mongodb_join.asp
-        result = await db.collection(collectionName).find(query1).toArray();
+        let query = {'countries.states.cities.name':'Detroit'};
+        result = await db.collection(collectionName).find(query).toArray();
         if (result && result.length > 0) {
-            console.log("Document found - find");
-            console.log(result);
+            console.log(chalk.cyan("Documents with city named Detroit listed below (excludes South America)"));
+            console.log(util.inspect(result, false, null, true /* enable colors */));
         } else {
-            console.log(`Document not found - find`);
+            console.error(`Document not found - find`);
         }
-        // Update document
-        let response = await db.collection(collectionName).updateOne(query1, updateValues);
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Here is a good place to just grab the part of the document we want (aggregate)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Add a new nested document to an existing parent
+        let updateValues = { $push: { 'countries.$[country].states.$[state].cities': {'name': 'Tucson'} } };
+        let arrayFilters = { 
+            arrayFilters: [
+                { 'country.name': 'United States' },
+                { 'state.name': 'Arizona' },
+            ]
+        };
+        let response = await db.collection(collectionName).updateMany({'countries.name':'United States', 'countries.states.name': 'Arizona'}, updateValues, arrayFilters);
         if(response.modifiedCount > 0) {
-            console.log("Document updated");
+            console.log(chalk.cyan("New city Tucson added to state Arizona"));
+            result = await db.collection(collectionName).find({}).toArray();
+            if (result && result.length > 0) {
+                console.log(util.inspect(result, false, null, true /* enable colors */));
+            }
         } else if(response.upsertedCount > 0) {
-            console.log(`Document upserted - upsertedId: ${response.upsertedId}`);
+            console.log(chalk.cyan(`Document upserted - upsertedId: ${response.upsertedId}`));
         } else {
-            console.log(`Document not found - updateOne`);
+            console.error(`Document not found - updateMany`);
         }
-        // Delete document
-        response = await db.collection(collectionName).deleteOne(query2);
-        if(response.deletedCount > 0) {
-            console.log("Document deleted");
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Here is a good place to remove a nested document (country, state, or city) without removing the parent
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Update only a nested document
+        updateValues = { $set: { 'countries.$[country].states.$[state].cities.$[city].newProperty': 'Some all new property added to exsiting nested document' } };
+        arrayFilters = { 
+            arrayFilters: [
+                { 'country.states': { $exists: true } },
+                { 'state.cities': { $exists: true } },
+                { 'city.name': 'Detroit' }
+            ]
+        };
+        response = await db.collection(collectionName).updateMany({'countries.states.cities.name':'Detroit'}, updateValues, arrayFilters);
+        if(response.modifiedCount > 0) {
+            console.log(chalk.cyan("Documents with city named Detroit updated to add a new property on city"));
+        } else if(response.upsertedCount > 0) {
+            console.log(chalk.cyan(`Document upserted - upsertedId: ${response.upsertedId}`));
         } else {
-            console.log(`Document not found - deleteOne`);
+            console.error(`Document not found - updateMany`);
+        }
+        result = await db.collection(collectionName).findOne({});
+        console.log(util.inspect(result, false, null, true /* enable colors */));
+        // Delete document
+        response = await db.collection(collectionName).deleteMany({'countries.states.cities.name':'Tucson'});
+        if(response.deletedCount > 0) {
+            console.log(chalk.cyan("Documents with city named Tucson have been deleted - Below is what remains"));
+            result = await db.collection(collectionName).find({}).toArray();
+            if (result && result.length > 0) {
+                console.log(util.inspect(result, false, null, true /* enable colors */));
+            }
+        } else {
+            console.error(`Document not found - deleteOne`);
         }
         // Drop collection
         await dropCollection(db, collectionName);
-        console.log("Collection dropped");
+        console.log(chalk.cyan("Collection dropped"));
         client.close();
-        console.log("Database closed");
+        console.log(chalk.cyan("Database closed"));
     } catch(err) {
         if(client) {
             client.close();

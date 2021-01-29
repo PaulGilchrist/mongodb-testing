@@ -1,0 +1,69 @@
+[
+    {
+        "name": "North America",
+        "countries": [
+            {
+                "name": "Canada",
+                "states": [
+                    { 
+                        "name": "Manitoba"
+                    },
+                    {
+                        "name": "Ontario",
+                        "cities": [
+                            {
+                                "name": "Toronto"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Quebec"
+                    }
+                ]
+            },
+            {
+                "name": "United States",
+                "states": [
+                    {
+                        "abbreviation": "AZ",
+                        "name": "Arizona"
+                    },
+                    {
+                        "abbreviation": "GA",
+                        "name": "Georgia"
+                    },
+                    {
+                        "abbreviation": "MI",
+                        "name": "Michigan",
+                        "cities": [
+                            {
+                                "name": "Detroit"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "South America",
+        "countries": [
+            {
+                "name": "Brazil",
+                "states": [
+                    {
+                        "name": "Bahia",
+                        "cities": [
+                            {
+                                "name": "Salvador"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Rio De Janeiro"
+                    }
+                ]
+            }
+        ]
+    }
+]
