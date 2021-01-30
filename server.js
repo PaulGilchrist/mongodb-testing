@@ -1,9 +1,6 @@
 
-// https://www.w3schools.com/nodejs/nodejs_mongodb.asp
-// docker run -d -p 27017:27017 -v c/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
-// docker stop mongo-testing-db
-// docker start mongo-testing-db
-// docker rm -f <containerID>
+// Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
+// docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
 
 const chalk = require('chalk');
 const fs = require('fs');
