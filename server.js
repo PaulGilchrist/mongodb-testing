@@ -83,14 +83,16 @@ const main = async () => {
         } else {
             console.error(`Document not found - find`);
         }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Here is a good place to just grab the part of the document we want (aggregate)
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Add a new nested document to an existing parent
+        // Project (select) only the city names
+        const projection = {'countries.states.cities.name': 1}
+        result = await db.collection(collectionName).find({}).project(projection).toArray();
+        if (result && result.length > 0) {
+            console.log(chalk.cyan("Projecting only the city names"));
+            console.log(util.inspect(result, false, null, true /* enable colors */));
+        } else {
+            console.error(`Document not found - find`);
+        }
+        // Push (insert) a new nested document to an existing parent array
         let updateValues = { $push: { 'countries.$[country].states.$[state].cities': {'name': 'Tucson'} } };
         let arrayFilters = { 
             arrayFilters: [
@@ -101,7 +103,7 @@ const main = async () => {
         let response = await db.collection(collectionName).updateMany({'countries.name':'United States', 'countries.states.name': 'Arizona'}, updateValues, arrayFilters);
         if(response.modifiedCount > 0) {
             console.log(chalk.cyan("New city Tucson added to state Arizona"));
-            result = await db.collection(collectionName).find({}).toArray();
+            result = await db.collection(collectionName).find({'countries.states.cities.name': 'Tucson'}).toArray();
             if (result && result.length > 0) {
                 console.log(util.inspect(result, false, null, true /* enable colors */));
             }
@@ -110,14 +112,24 @@ const main = async () => {
         } else {
             console.error(`Document not found - updateMany`);
         }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Here is a good place to remove a nested document (country, state, or city) without removing the parent
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Update only a nested document
+        // Pull (delete) a nested document from a parent array without removing the parent or the array
+        updateValues = { $pull: { 'countries.$[country].states.$[state].cities': { name: 'Tucson' } } };
+        arrayFilters = { 
+            arrayFilters: [
+                { 'country.name': 'United States' },
+                { 'state.name': 'Arizona' }
+            ]
+        };        response = await db.collection(collectionName).updateMany({'countries.states.cities.name': 'Tucson'}, updateValues, arrayFilters);
+        if(response.modifiedCount > 0) {
+            console.log(chalk.cyan("Tucson removed from state Arizona"));
+            result = await db.collection(collectionName).find({'countries.states.name': 'Arizona'}).toArray();
+            if (result && result.length > 0) {
+                console.log(util.inspect(result, false, null, true /* enable colors */));
+            }
+        } else {
+            console.error(`Document not found - Delete nested document`);
+        }
+        // Update a nested document
         updateValues = { $set: { 'countries.$[country].states.$[state].cities.$[city].newProperty': 'Some all new property added to exsiting nested document' } };
         arrayFilters = { 
             arrayFilters: [
@@ -134,12 +146,12 @@ const main = async () => {
         } else {
             console.error(`Document not found - updateMany`);
         }
-        result = await db.collection(collectionName).findOne({});
+        result = await db.collection(collectionName).find({'countries.states.cities.name': 'Detroit'}).toArray();
         console.log(util.inspect(result, false, null, true /* enable colors */));
         // Delete document
-        response = await db.collection(collectionName).deleteMany({'countries.states.cities.name':'Tucson'});
+        response = await db.collection(collectionName).deleteMany({'countries.states.cities.name':'Detroit'});
         if(response.deletedCount > 0) {
-            console.log(chalk.cyan("Documents with city named Tucson have been deleted - Below is what remains"));
+            console.log(chalk.cyan("Documents with city named Detroit have been deleted - Below is what remains"));
             result = await db.collection(collectionName).find({}).toArray();
             if (result && result.length > 0) {
                 console.log(util.inspect(result, false, null, true /* enable colors */));
