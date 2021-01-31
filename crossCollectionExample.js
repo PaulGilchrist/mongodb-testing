@@ -1,6 +1,8 @@
 
 // Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
-// docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
+// docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest --replSet rs0
+// Next, connect to your instance with a mongo shell, and initiate the new Replica Set using command "rs.initiate()"
+//  or remove the section of this code that demonstrates a transaction (transactions require a replica set, even if a set of 1 node
 
 const chalk = require('chalk');
 const fs = require('fs');
@@ -89,6 +91,11 @@ const initDatabase = async (db) => {
     console.log(chalk.cyan('City documents inserted'));
     result = await db.collection('cities').find({}).sort({ 'name': 1 }).toArray();
     console.log(result);
+    // Create indexes
+    db.collection('countries').createIndex('continentId');
+    db.collection('states').createIndex('countryId');
+    db.collection('cities').createIndex('stateId');
+    console.log(chalk.cyan('Indexes added'));
 }
 
 const throwError = (err, client) => {
@@ -104,6 +111,22 @@ const main = async () => {
         console.log(chalk.cyan('Database connected'));
         const db = client.db(dbName);
         await initDatabase(db);
+        // Transaction based upsert/update
+        let state = await db.collection('states').findOne({name: 'Michigan'});
+        const session = client.startSession();        
+        try {
+            await session.withTransaction(async () => {
+                // Important:: You must pass the session to the operations
+                await db.collection('cities').insertOne({ name: 'Flint', stateId: state._id }, { session });
+                await db.collection('cities').insertOne({ name: 'Grand Rapids', stateId: state._id }, { session });
+            }, transactionOptions);
+        } catch {
+            console.log('Transaction failes')
+        } finally {
+            await session.endSession();
+        }
+        console.log(chalk.cyan('Completed transaction based upsert/update'));
+
         // Cross collection query - Bottom up
         result = await db.collection('cities').aggregate([
             {$match: {name: 'Detroit'}},

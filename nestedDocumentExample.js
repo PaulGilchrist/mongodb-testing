@@ -116,7 +116,8 @@ const main = async () => {
                 { 'country.name': 'United States' },
                 { 'state.name': 'Arizona' }
             ]
-        };        response = await db.collection(collectionName).updateMany({'countries.states.cities.name': 'Tucson'}, updateValues, arrayFilters);
+        };
+        response = await db.collection(collectionName).updateMany({'countries.states.cities.name': 'Tucson'}, updateValues, arrayFilters);
         if(response.modifiedCount > 0) {
             console.log(chalk.cyan("Tucson removed from state Arizona"));
             result = await db.collection(collectionName).find({'countries.states.name': 'Arizona'}).toArray();
