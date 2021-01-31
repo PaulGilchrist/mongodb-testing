@@ -7,15 +7,10 @@ const fs = require('fs');
 const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
-const throwError = (err, client) => {
-    client.close();
-    throw err;
-}
-
 // Global variables
-const collectionName = 'continents';
-const documentsFileName = 'documents.json';
-const dbName = 'my_database';
+const collectionName = 'nestedDocument';
+const documentsFileName = './data/nestedDocument.json';
+const dbName = 'nestedDocument';
 const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -50,6 +45,11 @@ const dropCollection = async (db, collectionName) => {
         }
     }
     return dropSuccess;
+}
+
+const throwError = (err, client) => {
+    client.close();
+    throw err;
 }
 
 const main = async () => {
