@@ -63,46 +63,67 @@ const main = async () => {
         console.log(chalk.cyan("Database connected"));
         const db = client.db(dbName);
         // Insert documents
-        let result = await db.collection('continents').insertOne({"name":"North America"});
-        result = await db.collection('countries').insertOne({"continentId": result.insertedId,"name":"Canada"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Manitoba"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Ontario"});
-        result = await db.collection('cities').insertOne({"stateId": result.insertedId,"name":"Toronto"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Quebec"});   
-        result = await db.collection('countries').insertOne({"continentId": result.insertedId,"name":"United States"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Arizona"});
-        result = await db.collection('cities').insertOne({"stateId": result.insertedId,"name":"Phoenix"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Georgia"});
-        result = await db.collection('cities').insertOne({"stateId": result.insertedId,"name":"Atlanta"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Michigan"});
-        result = await db.collection('cities').insertOne({"stateId": result.insertedId,"name":"Detroit"});
-        result = await db.collection('continents').insertOne({"name":"South America"});
-        result = await db.collection('countries').insertOne({"continentId": result.insertedId,"name":"Brazil"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Bahia"});
-        result = await db.collection('cities').insertOne({"stateId": result.insertedId,"name":"Salvador"});
-        result = await db.collection('states').insertOne({"countryId": result.insertedId,"name":"Rio De Janeiro"});
+        let continent = await db.collection('continents').insertOne({ "name": "North America" });
+        let country = await db.collection('countries').insertOne({ "continentId": continent.insertedId, "name": "Canada" });
+        let state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Manitoba" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Ontario" });
+        let city = await db.collection('cities').insertOne({ "stateId": state.insertedId, "name": "Toronto" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Quebec" });
+        country = await db.collection('countries').insertOne({ "continentId": continent.insertedId, "name": "United States" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Arizona" });
+        city = await db.collection('cities').insertOne({ "stateId": state.insertedId, "name": "Phoenix" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Georgia" });
+        city = await db.collection('cities').insertOne({ "stateId": state.insertedId, "name": "Atlanta" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Michigan" });
+        city = await db.collection('cities').insertOne({ "stateId": state.insertedId, "name": "Detroit" });
+        continent = await db.collection('continents').insertOne({ "name": "South America" });
+        country = await db.collection('countries').insertOne({ "continentId": continent.insertedId, "name": "Brazil" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Bahia" });
+        city = await db.collection('cities').insertOne({ "stateId": state.insertedId, "name": "Salvador" });
+        state = await db.collection('states').insertOne({ "countryId": country.insertedId, "name": "Rio De Janeiro" });
         console.log(chalk.cyan("Continent documents inserted"));
-        result = await db.collection('continents').find({}).sort({"name": 1}).toArray();
+        result = await db.collection('continents').find({}).sort({ "name": 1 }).toArray();
         console.log(result);
         console.log(chalk.cyan("Country documents inserted"));
-        result = await db.collection('countries').find({}).sort({"name": 1}).toArray();
+        result = await db.collection('countries').find({}).sort({ "name": 1 }).toArray();
         console.log(result);
         console.log(chalk.cyan("State documents inserted"));
-        result = await db.collection('states').find({}).sort({"name": 1}).toArray();
+        result = await db.collection('states').find({}).sort({ "name": 1 }).toArray();
         console.log(result);
         console.log(chalk.cyan("City documents inserted"));
-        result = await db.collection('cities').find({}).sort({"name": 1}).toArray();
+        result = await db.collection('cities').find({}).sort({ "name": 1 }).toArray();
         console.log(result);
         // Cross collection query
-        result = await db.collection('states').aggregate([
+        result = await db.collection('continents').aggregate([
             {
-                $lookup: {
-                    from: "cities",
-                    localField: "_id",
-                    foreignField: "stateId",
-                    as: "cities"
+                "$lookup": {
+                    "from": "countries",
+                    "let": { "continentId": "$_id" },
+                    "pipeline": [
+                        { "$match": { "$expr": { "$eq": ["$continentId", "$$continentId"] } } },
+                        {
+                            "$lookup": {
+                                "from": "states",
+                                "let": { "countryId": "$_id" },
+                                "pipeline": [
+                                    { "$match": { "$expr": { "$eq": ["$countryId", "$$countryId"] } } },
+                                    {
+                                        "$lookup": {
+                                            "from": "cities",
+                                            "let": { "stateId": "$_id" },
+                                            "pipeline": [
+                                                { "$match": { "$expr": { "$eq": ["$stateId", "$$stateId"] } } }
+                                            ],
+                                            "as": "cities"
+                                        }
+                                    }                                ],
+                                "as": "states"
+                            },
+                        }
+                    ],
+                    "as": "countries"
                 }
-            }           
+            }
         ]).toArray();
         console.log(chalk.cyan("Cross collection query"));
         console.log(util.inspect(result, false, null, true /* enable colors */));
@@ -121,8 +142,8 @@ const main = async () => {
         console.log(chalk.cyan("Collections dropped"));
         client.close();
         console.log(chalk.cyan("Database closed"));
-    } catch(err) {
-        if(client) {
+    } catch (err) {
+        if (client) {
             client.close();
         }
         console.log(err);
