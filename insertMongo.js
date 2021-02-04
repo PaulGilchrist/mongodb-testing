@@ -20,16 +20,16 @@ const mongoClientOptions = {
 };
 const url = 'mongodb://localhost:27017/'; // default mongo port
 
-let batchSize = 1000; // Default=200
+let batchSize = 1000; // Mongo could handle > 1000 where SQL could not go over 200
 let consoleUpdateDelay = 1000;
-let errorThrottleDelay = 30000;
+let errorThrottleDelay = 30000; // Mongo never needed to throttle, where SQL would throttle constantly
 let throttleAdaptationDelay = 60000
 
-let insertInterval = 1;
-let maxInsertInterval = 20;
-let minInsertInterval = 1;
+let insertInterval = 1; 
+let maxInsertInterval = 20; // Mongo never needed more than 1, where SQL would go all the way to 250
+let minInsertInterval = 1; // Mongo never needs to slowdown, where SQL min was 20
 
-let consoleUpdateTimer = 0;
+let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
 let throttleIntervalTimer = null
 
@@ -48,7 +48,6 @@ const main = async () => {
         // Determine how many contacts currently exist
         let count = await db.collection(collectionName).countDocuments({});
         currentContacts = count;
-        // Create contact
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
         consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
         throttleIntervalTimer = setInterval(() => {

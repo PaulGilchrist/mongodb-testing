@@ -76,7 +76,7 @@ let insertInterval = 20;
 let maxInsertInterval = 250;
 let minInsertInterval = 20;
 
-let consoleUpdateTimer = 0;
+let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
 let throttleIntervalTimer = null
 
