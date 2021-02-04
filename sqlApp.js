@@ -67,14 +67,14 @@ const dbConfig = {
     port: 1433
 
 };
-const batchSize = 100;
+let batchSize = 200;
 let consoleUpdateDelay = 5000;
 let errorThrottleDelay = 30000;
 let throttleAdaptationDelay = 60000
 
-let insertInterval = 10;
-let maxInsertInterval = 50;
-let minInsertInterval = 10;
+let insertInterval = 20;
+let maxInsertInterval = 200;
+let minInsertInterval = 20;
 
 let consoleUpdateTimer = 0;
 let insertIntervalTimer = null;
@@ -153,15 +153,13 @@ const setErrorState = (state) => {
         if(inErrorState) {
             // We have an error so slow down
             if(insertInterval<maxInsertInterval) {
-                insertInterval++;
+                insertInterval += 5;
                 console.log(`Raising insert interval to ${insertInterval} ms`);
                 clearInterval(insertIntervalTimer);
                 insertIntervalTimer = setInterval(insertContact, insertInterval);
             }
-            // console.log(`Throttling for ${errorThrottleDelay} ms`);
             setTimeout(() => {
                 setErrorState(false);
-                // console.log(`Current insert interval = ${insertInterval} ms`);
             }, errorThrottleDelay);
         }
     }
