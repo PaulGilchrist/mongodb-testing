@@ -46,6 +46,9 @@ select c.id, c.firstName, c.lastName, a.street, a.city, a.state, a.zip, e.email,
         left outer join addresses a on a.contactId=c.id
         left outer join emails e on e.contactId=c.id
         left outer join phones p on p.contactId=c.id
+
+This file completed 80 million rows in around 24 hours with 8 vCPU and 24GB memory (running about 45% utilized)
+    Need to test again, as SQL was remote (Azuer SQL Database), where Mongo was local, however network load was under 10%
 */
 
 const chalk = require('chalk'); // Add color to the console

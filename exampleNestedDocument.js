@@ -8,7 +8,9 @@ const MongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
 // Global variables
+let client = null;
 const collectionName = 'nestedDocument';
+let db = null;
 const documentsFileName = './data/nestedDocument.json';
 const dbName = 'nestedDocument';
 const mongoClientOptions = {
@@ -17,61 +19,12 @@ const mongoClientOptions = {
 };
 const url = 'mongodb://localhost:27017/'; // default mongo port
 
-const createDatabase = async (url, mongoClientOptions) => {
-    return MongoClient.connect(url, mongoClientOptions);
-}
-
-const createCollection = async (db, collectionName) => {
-    let response = {};
-    try {
-        response = await db.createCollection(collectionName);
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceExists') {
-            throw err;
-        }
-    }
-    return response;
-}
-
-const dropCollection = async (db, collectionName) => {
-    let dropSuccess = false;
-    try {
-        dropSuccess = await db.collection(collectionName).drop();
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceNotFound') {
-            throw err;
-        } else {
-            dropSuccess = true;
-        }
-    }
-    return dropSuccess;
-}
-
-const throwError = (err, client) => {
-    client.close();
-    throw err;
-}
-
 const main = async () => {
-    let client = null;
     try {
-        // Create or connect to database
-        client = await createDatabase(url, mongoClientOptions);
-        console.log(chalk.cyan("Database connected"));
-        const db = client.db(dbName);
-        // Create or connect to collection
-        await createCollection(db, collectionName);
-        console.log(chalk.cyan("Collection created"));
-        // Insert document
-        const documentsJson = fs.readFileSync(documentsFileName);
-        const documents = JSON.parse(documentsJson);
-        await db.collection(collectionName).insertMany(documents);
-        console.log(chalk.cyan("Documents inserted - Below is the full document"));
-        console.log(util.inspect(documents, false, null, true /* enable colors */));
+        await initDatabase();
         // Find documents
         // Could optionally sort({ name: 1 }) between find() and toArray()
         // Could optionally limit(5) between find() and toArray()
-        // Could also join collections together.  See...https://www.w3schools.com/nodejs/nodejs_mongodb_join.asp
         let query = {'countries.states.cities.name':'Detroit'};
         result = await db.collection(collectionName).find(query).toArray();
         if (result && result.length > 0) {
@@ -132,7 +85,7 @@ const main = async () => {
         arrayFilters = { 
             arrayFilters: [
                 { 'country.states': { $exists: true } },
-                { 'state.cities': { $exists: true } },
+                { 'state.cities': { $exists: true } }, // We can use these to filter down further if city.name alone is not unique
                 { 'city.name': 'Detroit' }
             ]
         };
@@ -146,20 +99,17 @@ const main = async () => {
         }
         result = await db.collection(collectionName).find({'countries.states.cities.name': 'Detroit'}).toArray();
         console.log(util.inspect(result, false, null, true /* enable colors */));
-        // Delete document
-        response = await db.collection(collectionName).deleteMany({'countries.states.cities.name':'Detroit'});
-        if(response.deletedCount > 0) {
-            console.log(chalk.cyan("Documents with city named Detroit have been deleted - Below is what remains"));
-            result = await db.collection(collectionName).find({}).toArray();
-            if (result && result.length > 0) {
-                console.log(util.inspect(result, false, null, true /* enable colors */));
-            }
-        } else {
-            console.error(`Document not found - deleteOne`);
-        }
-        // Drop collection
-        await dropCollection(db, collectionName);
-        console.log(chalk.cyan("Collection dropped"));
+        // // Delete document
+        // response = await db.collection(collectionName).deleteMany({'countries.states.cities.name':'Detroit'});
+        // if(response.deletedCount > 0) {
+        //     console.log(chalk.cyan("Documents with city named Detroit have been deleted - Below is what remains"));
+        //     result = await db.collection(collectionName).find({}).toArray();
+        //     if (result && result.length > 0) {
+        //         console.log(util.inspect(result, false, null, true /* enable colors */));
+        //     }
+        // } else {
+        //     console.error(`Document not found - deleteOne`);
+        // }
         client.close();
         console.log(chalk.cyan("Database closed"));
     } catch(err) {
@@ -169,4 +119,66 @@ const main = async () => {
         console.log(err);
     }
 }
+
+const createDatabase = async (url, mongoClientOptions) => {
+    return MongoClient.connect(url, mongoClientOptions);
+}
+
+const createCollection = async (db, collectionName) => {
+    let response = {};
+    try {
+        response = await db.createCollection(collectionName);
+    } catch (err) {
+        if (err && err.codeName != 'NamespaceExists') {
+            throw err;
+        }
+    }
+    return response;
+}
+
+const dropCollection = async (db, collectionName) => {
+    let dropSuccess = false;
+    try {
+        dropSuccess = await db.collection(collectionName).drop();
+    } catch (err) {
+        if (err && err.codeName != 'NamespaceNotFound') {
+            throw err;
+        } else {
+            dropSuccess = true;
+        }
+    }
+    return dropSuccess;
+}
+
+const initDatabase = async () => {
+    try {
+        // Create or connect to database
+        client = await createDatabase(url, mongoClientOptions);
+        console.log(chalk.cyan('Database connected'));
+        db = client.db(dbName);
+        // Drop collections
+        await dropCollection(db, 'nestedDocument');
+        console.log(chalk.cyan('Any existing collections dropped'));
+        // Create or connect to collection
+        await createCollection(db, collectionName);
+        console.log(chalk.cyan("Collection created"));
+        // Insert documents
+        const documentsJson = fs.readFileSync(documentsFileName);
+        const documents = JSON.parse(documentsJson);
+        await db.collection(collectionName).insertMany(documents);
+        console.log(chalk.cyan("Documents inserted - Below is the full document"));
+        console.log(util.inspect(documents, false, null, true /* enable colors */));
+    } catch(err) {
+        if(client) {
+            client.close();
+        }
+        console.log(err);
+    }
+}
+
+const throwError = (err, client) => {
+    client.close();
+    throw err;
+}
+
 main();
