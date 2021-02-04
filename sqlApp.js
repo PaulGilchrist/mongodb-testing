@@ -67,17 +67,23 @@ const dbConfig = {
     port: 1433
 
 };
+const batchSize = 100;
+let consoleUpdateDelay = 5000;
+let errorThrottleDelay = 30000;
+let throttleAdaptationDelay = 60000
+
+let insertInterval = 10;
+let maxInsertInterval = 50;
+let minInsertInterval = 10;
+
 let consoleUpdateTimer = 0;
-let currentContacts = 0;
-let errorThrottleDelay = 10000;
-let inErrorState = false;
-const numContactsToCreate = 20000000;
-let insertInterval = 1;
 let insertIntervalTimer = null;
 let throttleIntervalTimer = null
-let throttleAdaptationDelay = 30000
-let maxInsertInterval = 20;
-let minInsertInterval = 1;
+
+let currentContacts = 0;
+const numContactsToCreate = 20000000;
+
+let inErrorState = false;
 let timeInErrorState = Date.now();
 
 const main = () => {
@@ -88,7 +94,7 @@ const main = () => {
             currentContacts = result.recordset[0].currentContacts
             // Create contact
             insertIntervalTimer = setInterval(insertContact, insertInterval);
-            consoleUpdateTimer = setInterval(updateConsole, 1000);
+            consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
             throttleIntervalTimer = setInterval(() => {
                 // If we went this whole time without an error then try going faster
                 if(!inErrorState && Date.now() - timeInErrorState >= errorThrottleDelay*10 && insertInterval>minInsertInterval) {
@@ -115,23 +121,25 @@ const insertContact = () => {
         return;
     }
     if(!inErrorState) {
-        currentContacts++;
-        const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
-        const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
-        const displayName = `${firstName} ${lastName}`
-        const street = faker.address.streetAddress().replace(/[^a-zA-Z ]/g, '');
-        const city = faker.address.city().replace(/[^a-zA-Z ]/g, '');;
-        const state = faker.address.stateAbbr();
-        const zip = faker.address.zipCode();
-        const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z ]/g, '');;
-        const phoneNumber = faker.phone.phoneNumber();
-        let query = `declare @id int`;
-        query += `\ninsert into contacts (firstName,lastName,displayName) values ('${firstName}','${lastName}','${displayName}')`;
-        query += `\nset @id=@@identity`;
-        query += `\ninsert into addresses (contactId,street,city,state,zip) values (@id,'${street}','${city}','${state}','${zip}')`;
-        query += `\ninsert into emails (contactId,email) values (@id,'${email}')`;
-        query += `\ninsert into phones (contactId,phoneNumber) values (@id,'${phoneNumber}')`;
+        let query = 'declare @id int';
+        for(let i = 0; i < batchSize; i++) {
+            const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
+            const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
+            const displayName = `${firstName} ${lastName}`
+            const street = faker.address.streetAddress().replace(/[^a-zA-Z ]/g, '');
+            const city = faker.address.city().replace(/[^a-zA-Z ]/g, '');;
+            const state = faker.address.stateAbbr();
+            const zip = faker.address.zipCode();
+            const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z ]/g, '');;
+            const phoneNumber = faker.phone.phoneNumber();
+            query += `\ninsert into contacts (firstName,lastName,displayName) values ('${firstName}','${lastName}','${displayName}')`;
+            query += `\nset @id=@@identity`;
+            query += `\ninsert into addresses (contactId,street,city,state,zip) values (@id,'${street}','${city}','${state}','${zip}')`;
+            query += `\ninsert into emails (contactId,email) values (@id,'${email}')`;
+            query += `\ninsert into phones (contactId,phoneNumber) values (@id,'${phoneNumber}')`;
+        }
         sql.query(query).then(result => {
+            currentContacts += batchSize;
         }).catch(err => {
             setErrorState(true);
         });
