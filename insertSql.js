@@ -73,7 +73,7 @@ let errorThrottleDelay = 30000;
 let throttleAdaptationDelay = 60000
 
 let insertInterval = 20;
-let maxInsertInterval = 200;
+let maxInsertInterval = 250;
 let minInsertInterval = 20;
 
 let consoleUpdateTimer = 0;

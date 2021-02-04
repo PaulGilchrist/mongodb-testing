@@ -13,5 +13,11 @@
     "faker": "^5.3.1",
     "mongodb": "^3.6.2",
     "mssql": "^6.3.1"
+  },
+  "devDependencies": {
+    "@types/chalk": "2.2.0",
+    "@types/faker": "4.1.7",
+    "@types/mongodb": "^3.6.4",
+    "@types/mssql": "^6.0.7"
   }
 }
