@@ -13,6 +13,7 @@ const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
 // Global variables
+let client = null;
 const collectionName = 'contacts';
 let db = null;
 const dbName = 'mongotest';
@@ -42,7 +43,6 @@ let inErrorState = false;
 let timeInErrorState = Date.now();
 
 const main = async () => {
-    let client = null;
     try {
         client = await createDatabase(url, mongoClientOptions);
         db = client.db(dbName);
@@ -69,6 +69,14 @@ const main = async () => {
     }
 }
 
+const close = () => {
+    clearInterval(consoleUpdateTimer);
+    clearInterval(insertIntervalTimer);
+    clearInterval(throttleIntervalTimer);
+    client.close();
+    console.log(`Currently inserted contacts = ${currentContacts}`);    
+}
+
 const createCollection = async (db, collectionName) => {
     let response = {};
     try {
@@ -87,9 +95,7 @@ const createDatabase = async (url, mongoClientOptions) => {
 
 const insertContacts = () => {
     if(currentContacts>=numContactsToCreate) {
-        clearInterval(consoleUpdateTimer);
-        clearInterval(insertIntervalTimer);
-        clearInterval(throttleIntervalTimer);
+        close();
         return;
     }
     if(!inErrorState) {
@@ -111,7 +117,7 @@ const insertContacts = () => {
                 ],
                 emails: [
                     {
-                        email: faker.internet.email(firstName, lastName).replace(/[^a-zA-Z ]/g, '')
+                        email: faker.internet.email(firstName, lastName).replace(/[^a-zA-Z\. ]/g, '')
                     }
                 ],
                 phones: [

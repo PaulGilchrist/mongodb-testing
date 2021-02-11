@@ -57,6 +57,7 @@ const args = require('minimist')(process.argv.slice(2)); // Get arguments by nam
 const sql = require('mssql');
 const util = require('util');
 
+let connection = null;
 const dbConfig = {
     server: args['server'] || process.env.server, // Make sure to pass these in, or set them in nodemon.json or the environment
     database: args['database'] || process.env.database, // Make sure to pass these in, or set them in nodemon.json or the environment
@@ -92,7 +93,8 @@ let timeInErrorState = Date.now();
 
 const main = () => {
     //Initiallising SQL connection string
-    sql.connect(dbConfig).then(() => {
+    sql.connect(dbConfig).then((conn) => {
+        connection = conn;
         // Determine how many contacts currently exist
         sql.query(`select count(*) as currentContacts from dbo.contacts`).then(result => {
             currentContacts = result.recordset[0].currentContacts
@@ -110,6 +112,7 @@ const main = () => {
             }, throttleAdaptationDelay);
         }).catch(err => {
             console.log(err);
+            connection.close();
         });
     }).catch((err) => {
         console.error(`SQL connection error`);
@@ -117,12 +120,17 @@ const main = () => {
     });
 }
 
+const close = () => {
+    clearInterval(consoleUpdateTimer);
+    clearInterval(insertIntervalTimer);
+    clearInterval(throttleIntervalTimer);
+    connection.close();
+    console.log(`Currently inserted contacts = ${currentContacts}`);    
+}
+
 const insertContact = () => {
     if(currentContacts>=numContactsToCreate) {
-        clearInterval(consoleUpdateTimer);
-        clearInterval(insertIntervalTimer);
-        clearInterval(throttleIntervalTimer);
-        console.log(`Currently inserted contacts = ${currentContacts}`);
+        close();
         return;
     }
     if(!inErrorState) {
@@ -135,7 +143,7 @@ const insertContact = () => {
             const city = faker.address.city().replace(/[^a-zA-Z ]/g, '');;
             const state = faker.address.stateAbbr();
             const zip = faker.address.zipCode();
-            const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z ]/g, '');;
+            const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z\. ]/g, '');;
             const phoneNumber = faker.phone.phoneNumber();
             query += `\ninsert into contacts (firstName,lastName,displayName) values ('${firstName}','${lastName}','${displayName}')`;
             query += `\nset @id=@@identity`;
