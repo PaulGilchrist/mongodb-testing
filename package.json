@@ -4,20 +4,24 @@
   "description": "Test of MongoDB",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "insertSql": "nodemon insertSql"
   },
   "author": "Paul Gilchrist",
   "license": "ISC",
   "dependencies": {
     "chalk": "^4.1.0",
     "faker": "^5.3.1",
+    "minimist": "^1.2.5",
     "mongodb": "^3.6.2",
     "mssql": "^6.3.1"
   },
   "devDependencies": {
     "@types/chalk": "2.2.0",
     "@types/faker": "4.1.7",
+    "@types/minimist": "^1.2.1",
     "@types/mongodb": "^3.6.4",
-    "@types/mssql": "^6.0.7"
+    "@types/mssql": "^6.0.7",
+    "nodemon": "^2.0.7"
   }
 }

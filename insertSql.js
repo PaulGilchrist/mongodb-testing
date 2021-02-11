@@ -53,20 +53,21 @@ This file completed 80 million rows in around 24 hours with 8 vCPU and 24GB memo
 
 const chalk = require('chalk'); // Add color to the console
 const faker = require('faker/locale/en_US');
+const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const sql = require('mssql');
 const util = require('util');
 
 const dbConfig = {
-    server: 'mongotest.database.windows.net',
-    database: 'test',
-    user: 'pgilchrist',
+    server: args['server'] || process.env.server, // Make sure to pass these in, or set them in nodemon.json or the environment
+    database: args['database'] || process.env.database, // Make sure to pass these in, or set them in nodemon.json or the environment
+    user: args['user'] || process.env.user, // Make sure to pass these in, or set them in nodemon.json or the environment
     options: {
         encrypt: true,
         enableArithAbort: true,
         trustedConnection: true,
         useUTC: true
     },
-    password: 'Passw)rd',
+    password: args['password'] || process.env.password, // Make sure to pass these in, or set them in nodemon.json or the environment
     port: 1433
 
 };
@@ -121,6 +122,7 @@ const insertContact = () => {
         clearInterval(consoleUpdateTimer);
         clearInterval(insertIntervalTimer);
         clearInterval(throttleIntervalTimer);
+        console.log(`Currently inserted contacts = ${currentContacts}`);
         return;
     }
     if(!inErrorState) {

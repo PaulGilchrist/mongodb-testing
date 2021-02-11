@@ -1,9 +1,9 @@
 'use strict';
 
 /*
-// Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
-// docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
-
+Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
+    docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
+Connection String = mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false
 This file completed 20 million documents, each with 3 additional sub objects (80 million total objects) in under 30 minutes with < 4 vCPU and <4GB memory
 */
 
