@@ -58,6 +58,7 @@ const sql = require('mssql');
 const util = require('util');
 
 let connection = null;
+
 const dbConfig = {
     server: args['server'] || process.env.server, // Make sure to pass these in, or set them in nodemon.json or the environment
     database: args['database'] || process.env.database, // Make sure to pass these in, or set them in nodemon.json or the environment
@@ -72,6 +73,12 @@ const dbConfig = {
     port: 1433
 
 };
+/*
+    MS SQL serverless with max 8 vCPU can handle batchSize=200 with insertInterval=250 (averaged 1760 records per second)
+    Cosmos DB serverless can handle batchSize=250 with insertInterval=250 (averaged 3520 records per second)
+    Cosmos DB Max 10k RU/s can handle batchSize=500 with insertInterval=50 (averaged 7200 records per second)
+    Mongo DB local can handle batchSize=1000 with insertInterval=1 (averaged 44,444 records per second)
+*/
 let batchSize = 200;
 let consoleUpdateDelay = 5000;
 let errorThrottleDelay = 30000;
@@ -99,7 +106,7 @@ const main = () => {
         sql.query(`select count(*) as currentContacts from dbo.contacts`).then(result => {
             currentContacts = result.recordset[0].currentContacts
             // Create contact
-            insertIntervalTimer = setInterval(insertContact, insertInterval);
+            insertIntervalTimer = setInterval(insertContacts, insertInterval);
             consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
             throttleIntervalTimer = setInterval(() => {
                 // If we went this whole time without an error then try going faster
@@ -107,7 +114,7 @@ const main = () => {
                     insertInterval--;
                     console.log(`Lowering insert interval to ${insertInterval} ms`);
                     clearInterval(insertIntervalTimer);
-                    insertIntervalTimer = setInterval(insertContact, insertInterval);
+                    insertIntervalTimer = setInterval(insertContacts, insertInterval);
                 }
             }, throttleAdaptationDelay);
         }).catch(err => {
@@ -128,7 +135,7 @@ const close = () => {
     console.log(`Currently inserted contacts = ${currentContacts}`);    
 }
 
-const insertContact = () => {
+const insertContacts = () => {
     if(currentContacts>=numContactsToCreate) {
         close();
         return;
@@ -139,11 +146,11 @@ const insertContact = () => {
             const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
             const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
             const displayName = `${firstName} ${lastName}`
-            const street = faker.address.streetAddress().replace(/[^a-zA-Z ]/g, '');
+            const street = faker.address.streetAddress().replace(/[^0-9a-zA-Z ]/g, '');
             const city = faker.address.city().replace(/[^a-zA-Z ]/g, '');;
             const state = faker.address.stateAbbr();
             const zip = faker.address.zipCode();
-            const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z\. ]/g, '');;
+            const email = faker.internet.email(firstName, lastName).replace(/[^a-zA-Z@\. ]/g, '');;
             const phoneNumber = faker.phone.phoneNumber();
             query += `\ninsert into contacts (firstName,lastName,displayName) values ('${firstName}','${lastName}','${displayName}')`;
             query += `\nset @id=@@identity`;
@@ -169,7 +176,7 @@ const setErrorState = (state) => {
                 insertInterval += 5;
                 console.log(`Raising insert interval to ${insertInterval} ms`);
                 clearInterval(insertIntervalTimer);
-                insertIntervalTimer = setInterval(insertContact, insertInterval);
+                insertIntervalTimer = setInterval(insertContacts, insertInterval);
             }
             setTimeout(() => {
                 setErrorState(false);
