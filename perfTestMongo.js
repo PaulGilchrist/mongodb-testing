@@ -3,7 +3,8 @@
 
 const chalk = require('chalk');
 const fs = require('fs');
-const MongoClient = require('mongodb').MongoClient;
+const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
+const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
 // Global variables
@@ -15,7 +16,7 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const url = 'mongodb://localhost:27017/'; // default mongo port
+const connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/'; // default mongo port
 
 const main = async () => {
     try {
@@ -42,10 +43,6 @@ const main = async () => {
         console.log(err);
     }
     client.close();
-}
-
-const createDatabase = async (url, mongoClientOptions) => {
-    return MongoClient.connect(url, mongoClientOptions);
 }
 
 const createCollection = async (db, collectionName) => {
@@ -77,7 +74,7 @@ const dropCollection = async (db, collectionName) => {
 const initDatabase = async () => {
     try {
         // Create or connect to database
-        client = await createDatabase(url, mongoClientOptions);
+        client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
         // Create or connect to collection
         await createCollection(db, collectionName);

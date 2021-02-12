@@ -60,16 +60,16 @@ const util = require('util');
 let connection = null;
 
 const dbConfig = {
-    server: args['server'] || process.env.server, // Make sure to pass these in, or set them in nodemon.json or the environment
-    database: args['database'] || process.env.database, // Make sure to pass these in, or set them in nodemon.json or the environment
-    user: args['user'] || process.env.user, // Make sure to pass these in, or set them in nodemon.json or the environment
+    server: args['sqlServer'] || process.env.sqlServer, // Make sure to pass these in, or set them in nodemon.json or the environment
+    database: args['sqlDatabase'] || process.env.sqlDatabase, // Make sure to pass these in, or set them in nodemon.json or the environment
+    user: args['sqlUser'] || process.env.sqlUser, // Make sure to pass these in, or set them in nodemon.json or the environment
     options: {
         encrypt: true,
         enableArithAbort: true,
         trustedConnection: true,
         useUTC: true
     },
-    password: args['password'] || process.env.password, // Make sure to pass these in, or set them in nodemon.json or the environment
+    password: args['sqlPassword'] || process.env.sqlPassword, // Make sure to pass these in, or set them in nodemon.json or the environment
     port: 1433
 
 };

@@ -19,21 +19,21 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const mongoDbConnectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString;
+const connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
 /*
     MS SQL serverless with max 8 vCPU can handle batchSize=200 with insertInterval=250 (averaged 1760 records per second)
     Cosmos DB serverless can handle batchSize=250 with insertInterval=250 (averaged 3520 records per second)
     Cosmos DB Max 10k RU/s can handle batchSize=500 with insertInterval=50 (averaged 7200 records per second)
     Mongo DB local can handle batchSize=1000 with insertInterval=1 (averaged 44,444 records per second)
 */
-let batchSize = 500;
+let batchSize = 250;
 let consoleUpdateDelay = 5000;
 let errorThrottleDelay = 30000;
 let throttleAdaptationDelay = 60000
 
-let insertInterval = 50;
+let insertInterval = 250;
 let maxInsertInterval = 250;
-let minInsertInterval = 1;
+let minInsertInterval = 150;
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
@@ -47,7 +47,7 @@ let timeInErrorState = Date.now();
 
 const main = async () => {
     try {
-        client = await createDatabase();
+        client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
         await createCollection(db, collectionName);
         // Determine how many contacts currently exist
@@ -90,10 +90,6 @@ const createCollection = async (db, collectionName) => {
         }
     }
     return response;
-}
-
-const createDatabase = async () => {
-    return mongoClient.connect(mongoDbConnectionString, mongoClientOptions);
 }
 
 const insertContacts = () => {

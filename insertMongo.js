@@ -3,12 +3,13 @@
 /*
 Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
     docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
-Connection String = mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false
+Connection String = mongodb://localhost:27017/
 This file completed 20 million documents, each with 3 additional sub objects (80 million total objects) in under 30 minutes with < 4 vCPU and <4GB memory
 */
 
 const chalk = require('chalk'); // Add color to the console
 const faker = require('faker/locale/en_US');
+const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
@@ -21,21 +22,21 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const url = 'mongodb://localhost:27017/'; // default mongo port
+const connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/'; // default mongo port
 /*
     MS SQL serverless with max 8 vCPU can handle batchSize=200 with insertInterval=250 (averaged 1760 records per second)
     Cosmos DB serverless can handle batchSize=250 with insertInterval=250 (averaged 3520 records per second)
     Cosmos DB Max 10k RU/s can handle batchSize=500 with insertInterval=50 (averaged 7200 records per second)
     Mongo DB local can handle batchSize=1000 with insertInterval=1 (averaged 44,444 records per second)
 */
-let batchSize = 1000;
-let consoleUpdateDelay = 1000;
+let batchSize = 600;
+let consoleUpdateDelay = 5000;
 let errorThrottleDelay = 30000;
 let throttleAdaptationDelay = 60000
 
-let insertInterval = 1; 
-let maxInsertInterval = 20;
-let minInsertInterval = 1;
+let insertInterval = 100; 
+let maxInsertInterval = 200;
+let minInsertInterval = 100;
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
@@ -49,7 +50,7 @@ let timeInErrorState = Date.now();
 
 const main = async () => {
     try {
-        client = await createDatabase(url, mongoClientOptions);
+        client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
         await createCollection(db, collectionName);
         // Determine how many contacts currently exist
@@ -92,10 +93,6 @@ const createCollection = async (db, collectionName) => {
         }
     }
     return response;
-}
-
-const createDatabase = async (url, mongoClientOptions) => {
-    return mongoClient.connect(url, mongoClientOptions);
 }
 
 const insertContacts = () => {

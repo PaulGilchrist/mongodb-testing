@@ -4,7 +4,7 @@
 
 const chalk = require('chalk');
 const fs = require('fs');
-const MongoClient = require('mongodb').MongoClient;
+const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
 // Global variables
@@ -17,7 +17,7 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const url = 'mongodb://localhost:27017/'; // default mongo port
+const connectionString = 'mongodb://localhost:27017/'; // default mongo port
 
 const main = async () => {
     try {
@@ -120,10 +120,6 @@ const main = async () => {
     }
 }
 
-const createDatabase = async (url, mongoClientOptions) => {
-    return MongoClient.connect(url, mongoClientOptions);
-}
-
 const createCollection = async (db, collectionName) => {
     let response = {};
     try {
@@ -153,7 +149,7 @@ const dropCollection = async (db, collectionName) => {
 const initDatabase = async () => {
     try {
         // Create or connect to database
-        client = await createDatabase(url, mongoClientOptions);
+        client = await mongoClient.connect(connectionString, mongoClientOptions);
         console.log(chalk.cyan('Database connected'));
         db = client.db(dbName);
         // Drop collections
