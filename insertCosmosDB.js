@@ -18,28 +18,17 @@ const mongoClientOptions = {
     useUnifiedTopology: true
 };
 const connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
-/*
-    MS SQL serverless with max 8 vCPU can handle batchSize=200 with insertInterval=250 (averaged 1760 records per second)
-    Cosmos DB serverless can handle batchSize=250 with insertInterval=250 (averaged 3520 records per second)
-    Cosmos DB Max 10k RU/s can handle batchSize=500 with insertInterval=50 (averaged 7200 records per second)
-    Mongo DB local can handle batchSize=1000 with insertInterval=1 (averaged 44,444 records per second)
-*/
+
 let batchSize = 250;
 let consoleUpdateDelay = 5000;
-let errorThrottleDelay = 30000;
-let throttleAdaptationDelay = 60000
-
 let insertInterval = 250;
-let maxInsertInterval = 250;
-let minInsertInterval = 150;
+const numContactsToCreate = 20000000;
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
 let throttleIntervalTimer = null
 
 let currentContacts = 0;
-const numContactsToCreate = 20000000; // Default 20 million
-
 let inErrorState = false;
 let timeInErrorState = Date.now();
 
@@ -47,7 +36,6 @@ const main = async () => {
     try {
         client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
-        await db.createCollection(collectionName);
         // Determine how many contacts currently exist
         let count = await db.collection(collectionName).find({}).count();
         currentContacts = count;
@@ -55,15 +43,16 @@ const main = async () => {
         consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
         throttleIntervalTimer = setInterval(() => {
             // If we went this whole time without an error then try going faster
-            if (!inErrorState && Date.now() - timeInErrorState >= errorThrottleDelay * 10 && insertInterval > minInsertInterval) {
-                insertInterval--;
-                console.log(`Lowering insert interval to ${insertInterval} ms`);
+            if (!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
+                // Speed up inserts by 1%
+                insertInterval -= (insertInterval/100);
+                console.log(`Lowering insert interval to ${insertInterval.toFixed()} ms`);
                 clearInterval(insertIntervalTimer);
                 insertIntervalTimer = setInterval(insertContacts, insertInterval);
             }
-        }, throttleAdaptationDelay);
+        }, insertInterval * 200);
     } catch (err) {
-        if (client) {
+        if(client) {
             client.close();
         }
         console.log(err);
@@ -117,7 +106,7 @@ const insertContacts = () => {
             db.collection(collectionName).insertMany(contacts).then(result => {
                 currentContacts += batchSize;
             }).catch(err => {
-                setErrorState(true);
+                setErrorState(err);
             });
         }
     } catch {
@@ -126,22 +115,27 @@ const insertContacts = () => {
     }
 }
 
-const setErrorState = (state) => {
-    if (state != inErrorState) {
-        inErrorState = state;
+const setErrorState = (error) => {
+    if (error && !inErrorState) {
+        inErrorState = true;
         timeInErrorState = Date.now();
-        if (inErrorState) {
-            // We have an error so slow down
-            if (insertInterval < maxInsertInterval) {
-                insertInterval += 5;
-                console.log(`Raising insert interval to ${insertInterval} ms`);
-                clearInterval(insertIntervalTimer);
-                insertIntervalTimer = setInterval(insertContacts, insertInterval);
-            }
-            setTimeout(() => {
-                setErrorState(false);
-            }, errorThrottleDelay);
+        // Do not leave this error state until a delay has passed
+        let currentThrottleDelay = insertInterval * 100;
+        if(error.code === 50) {
+            currentThrottleDelay = insertInterval * 300;
+            console.warn(`ExceededTimeLimit. Pausing for ${currentThrottleDelay.toFixed(0)} ms`)
+        } else {
+            console.error(error);
         }
+        setTimeout(() => {
+            inErrorState = false;
+            timeInErrorState = Date.now();
+        }, currentThrottleDelay);
+        // Slow down future inserts by 5%
+        insertInterval += (insertInterval/20);
+        console.log(`Raising insert interval to ${insertInterval} ms`);
+        clearInterval(insertIntervalTimer);
+        insertIntervalTimer = setInterval(insertContacts, insertInterval);
     }
 }
 
