@@ -37,7 +37,7 @@ const main = async () => {
     //Initiallising SQL connection string
     try {
         connection = await sql.connect(dbConfig);
-        // Find first 10 contacts both with a firstName and living in a given state (parent and child object)
+        // Find first 2 contacts both with a firstName and living in a given state (parent and child object)
         let startTime = new Date();
         let query = `select top 2 c.id, c.firstName, c.lastName, c.displayName, a.id as addressId, a.street, a.city, a.state, a.zip, e.id as emailId, e.email, p.id as phoneId, p.phoneNumber
             from dbo.contacts c

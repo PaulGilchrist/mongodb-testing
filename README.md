@@ -10,7 +10,7 @@ To leverage the best perforance from MongoDB, a well thought out prodcution leve
 
 ## Performance Testing
 ### Goal
-Compare MSSQL against document database inserting 20 million contacts, (80 million objects), and determine which DB model perform best.
+Compare MSSQL against document database inserting 20 million contacts, (80 million objects), and determine which DB model performs best.
 
 #### Results
 * Azure SQL Database (8 vCPU) 
@@ -30,5 +30,4 @@ Compare MSSQL against document database inserting 20 million contacts, (80 milli
   * Cost = $132 per month (`half cost vs SQL`)
 
 #### Notes
-* *Cosmos DB indexes every property during inserts, where MongoDB and SQL both setup their indexes only after all the inserts were completed.  This makes this performance much better than what it initially looks like
 * `Cosmos DB only supports up to version 3.6 of MongoDB which does not support multi-document and distributed transactions.`  This feature is currently in development as of February 2021.
