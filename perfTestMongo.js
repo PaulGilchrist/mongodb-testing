@@ -1,10 +1,17 @@
 'use strict';
-// Before running this code, run insertMongo.js (and follow its setup steps)
+/*
+Before running this code, run insertMongo.js (and follow its setup steps)
+Also make sure to place environment variables in nodemon.json and run with nodemon
+    or have needed environment settings, or pass them in with node
+*/
 
 const chalk = require('chalk');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
+
+// Configuration
+const environment = 'cosmosDbServerless' // mongoDb, cosmosDbProvisioned, or cosmosDbServerless
 
 // Global variables
 let client = null;
@@ -15,14 +22,25 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/'; // default mongo port
+
+let connectionString = null;
+switch (environment) {
+    case 'cosmosDbProvisioned':
+        connectionString = args['cosmosDbProvisionedConnectionString'] || process.env.cosmosDbProvisionedConnectionString;
+        break;
+    case 'cosmosDbServerless':
+        connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
+        break;
+    default:
+        connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/';
+}
 
 const main = async () => {
     try {
         await initDatabase();
         // Find first 10 contacts both with a firstName and living in a given state (parent and child object)
         let startTime = new Date();
-        let query = {'firstName':'Paul', 'addresses.state':'MI'};
+        let query = { 'firstName': 'Paul', 'addresses.state': 'MI' };
         let contacts = await db.collection(collectionName).find(query).limit(2).toArray();
         let endTime = new Date();
         let elapsedTime = endTime - startTime;
@@ -34,9 +52,8 @@ const main = async () => {
             console.error(`Document not found - find`);
         }
         client.close();
-        console.log(chalk.cyan("Database closed"));
-    } catch(err) {
-        if(client) {
+    } catch (err) {
+        if (client) {
             client.close();
         }
         console.log(err);
@@ -77,8 +94,8 @@ const initDatabase = async () => {
         db = client.db(dbName);
         // Create or connect to collection
         await createCollection(db, collectionName);
-    } catch(err) {
-        if(client) {
+    } catch (err) {
+        if (client) {
             client.close();
         }
         console.log(err);

@@ -100,7 +100,7 @@ const main = async () => {
             if(!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
                 // Speed up inserts by 1%
                 insertInterval -= (insertInterval/100);
-                console.log(`Lowering insert interval to ${insertInterval} ms`);
+                console.log(`Lowering insert interval to ${insertInterval.toFixed(0)} ms`);
                 clearInterval(insertIntervalTimer);
                 insertIntervalTimer = setInterval(insertContacts, insertInterval);
             }

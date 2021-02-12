@@ -11,6 +11,12 @@ const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
 
+// Configuration
+const environment = 'cosmosDbProvisioned'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
+let batchSize = 500;
+let insertInterval = 250; 
+const numContactsToCreate = 20000000;
+
 // Global variables
 let client = null;
 const collectionName = 'contacts';
@@ -20,11 +26,18 @@ const mongoClientOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
-const connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/'; // default mongo port
 
-let batchSize = 600;
-let insertInterval = 100; 
-const numContactsToCreate = 20000000;
+let connectionString = null;
+switch (environment) {
+    case 'cosmosDbProvisioned':
+        connectionString = args['cosmosDbProvisionedConnectionString'] || process.env.cosmosDbProvisionedConnectionString;
+        break;
+    case 'cosmosDbServerless':
+        connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
+        break;
+    default:
+        connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/';
+}
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
@@ -39,7 +52,6 @@ const main = async () => {
     try {
         client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
-        await db.createCollection(collectionName);
         // Determine how many contacts currently exist
         let count = await db.collection(collectionName).countDocuments({});
         currentContacts = count;
@@ -50,7 +62,7 @@ const main = async () => {
             if(!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
                 // Speed up inserts by 1%
                 insertInterval -= (insertInterval/100);
-                console.log(`Lowering insert interval to ${insertInterval} ms`);
+                console.log(`Lowering insert interval to ${insertInterval.toFixed(0)} ms`);
                 clearInterval(insertIntervalTimer);
                 insertIntervalTimer = setInterval(insertContacts, insertInterval);
             }
