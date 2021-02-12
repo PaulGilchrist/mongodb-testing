@@ -14,7 +14,6 @@ CREATE INDEX idx_phones_phoneNumber on [dbo].[phones] (phoneNumber);
 
 */
 const chalk = require('chalk'); // Add color to the console
-const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const sql = require('mssql');
 const util = require('util');

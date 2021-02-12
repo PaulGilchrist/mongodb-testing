@@ -2,7 +2,6 @@
 // Before running this code, run insertMongo.js (and follow its setup steps)
 
 const chalk = require('chalk');
-const fs = require('fs');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
 const util = require('util');

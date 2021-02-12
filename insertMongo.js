@@ -7,11 +7,9 @@ Connection String = mongodb://localhost:27017/
 This file completed 20 million documents, each with 3 additional sub objects (80 million total objects) in under 30 minutes with < 4 vCPU and <4GB memory
 */
 
-const chalk = require('chalk'); // Add color to the console
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
-const util = require('util');
 
 // Global variables
 let client = null;
@@ -52,7 +50,7 @@ const main = async () => {
     try {
         client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
-        await createCollection(db, collectionName);
+        await db.createCollection(collectionName);
         // Determine how many contacts currently exist
         let count = await db.collection(collectionName).countDocuments({});
         currentContacts = count;
@@ -81,18 +79,6 @@ const close = () => {
     clearInterval(throttleIntervalTimer);
     client.close();
     console.log(`Currently inserted contacts = ${currentContacts}`);    
-}
-
-const createCollection = async (db, collectionName) => {
-    let response = {};
-    try {
-        response = await db.createCollection(collectionName);
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceExists') {
-            throw err;
-        }
-    }
-    return response;
 }
 
 const insertContacts = () => {

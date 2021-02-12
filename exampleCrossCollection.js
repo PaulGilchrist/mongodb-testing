@@ -33,7 +33,6 @@ If building a multi-node replica set - https://www.sohamkamani.com/blog/2016/06/
     Better would be to use Kubernetes or docker-compose
 */
 const chalk = require('chalk');
-const fs = require('fs');
 const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
@@ -163,32 +162,6 @@ const main = async () => {
     }
 }
 
-const createCollection = async (db, collectionName) => {
-    let response = {};
-    try {
-        response = await db.createCollection(collectionName);
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceExists') {
-            throw err;
-        }
-    }
-    return response;
-}
-
-const dropCollection = async (db, collectionName) => {
-    let dropSuccess = false;
-    try {
-        dropSuccess = await db.collection(collectionName).drop();
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceNotFound') {
-            throw err;
-        } else {
-            dropSuccess = true;
-        }
-    }
-    return dropSuccess;
-}
-
 const initDatabase = async () => {
     try {
         // Create or connect to database
@@ -196,10 +169,10 @@ const initDatabase = async () => {
         console.log(chalk.cyan('Database connected'));
         db = client.db(dbName);
         // Drop collections
-        await dropCollection(db, 'cities');
-        await dropCollection(db, 'states');
-        await dropCollection(db, 'countries');
-        await dropCollection(db, 'continents');
+        await db.collection('cities').drop();
+        await db.collection('states').drop();
+        await db.collection('countries').drop();
+        await db.collection('continents').drop();
         console.log(chalk.cyan('Any existing collections dropped'));
         // Insert documents
         let continent = await db.collection('continents').insertOne({ 'name': 'North America' });
@@ -244,11 +217,6 @@ const initDatabase = async () => {
         }
         console.log(err);
     }
-}
-
-const throwError = (err, client) => {
-    client.close();
-    throw err;
 }
 
 main();

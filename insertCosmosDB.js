@@ -4,11 +4,9 @@
 Before running this code, make sure to setup an Azure CosmosDB environment with Mongo support, and add its connection string to nodemon.json
 */
 
-const chalk = require('chalk'); // Add color to the console
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
-const util = require('util');
 
 // Global variables
 let client = null;
@@ -49,7 +47,7 @@ const main = async () => {
     try {
         client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
-        await createCollection(db, collectionName);
+        await db.createCollection(collectionName);
         // Determine how many contacts currently exist
         let count = await db.collection(collectionName).find({}).count();
         currentContacts = count;
@@ -78,18 +76,6 @@ const close = () => {
     clearInterval(throttleIntervalTimer);
     client.close();
     console.log(`Currently inserted contacts = ${currentContacts}`);
-}
-
-const createCollection = async (db, collectionName) => {
-    let response = {};
-    try {
-        response = await db.createCollection(collectionName);
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceExists') {
-            throw err;
-        }
-    }
-    return response;
 }
 
 const insertContacts = () => {

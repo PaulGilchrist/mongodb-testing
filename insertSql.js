@@ -51,11 +51,9 @@ This file completed 80 million rows in around 24 hours with 8 vCPU and 24GB memo
     Need to test again, as SQL was remote (Azuer SQL Database), where Mongo was local, however network load was under 10%
 */
 
-const chalk = require('chalk'); // Add color to the console
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const sql = require('mssql');
-const util = require('util');
 
 let connection = null;
 

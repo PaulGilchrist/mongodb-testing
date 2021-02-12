@@ -120,32 +120,6 @@ const main = async () => {
     }
 }
 
-const createCollection = async (db, collectionName) => {
-    let response = {};
-    try {
-        response = await db.createCollection(collectionName);
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceExists') {
-            throw err;
-        }
-    }
-    return response;
-}
-
-const dropCollection = async (db, collectionName) => {
-    let dropSuccess = false;
-    try {
-        dropSuccess = await db.collection(collectionName).drop();
-    } catch (err) {
-        if (err && err.codeName != 'NamespaceNotFound') {
-            throw err;
-        } else {
-            dropSuccess = true;
-        }
-    }
-    return dropSuccess;
-}
-
 const initDatabase = async () => {
     try {
         // Create or connect to database
@@ -153,10 +127,8 @@ const initDatabase = async () => {
         console.log(chalk.cyan('Database connected'));
         db = client.db(dbName);
         // Drop collections
-        await dropCollection(db, 'nestedDocument');
+        await db.collection('nestedDocument').drop();
         console.log(chalk.cyan('Any existing collections dropped'));
-        // Create or connect to collection
-        await createCollection(db, collectionName);
         console.log(chalk.cyan("Collection created"));
         // Insert documents
         const documentsJson = fs.readFileSync(documentsFileName);
@@ -170,11 +142,6 @@ const initDatabase = async () => {
         }
         console.log(err);
     }
-}
-
-const throwError = (err, client) => {
-    client.close();
-    throw err;
 }
 
 main();
