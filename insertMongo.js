@@ -11,6 +11,7 @@ If using CosmosDB rather than MongoDB, make sure to index $** and the Mongo driv
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;
+const v8 = require('v8');
 
 // Configuration
 const environment = 'cosmosDbProvisioned'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
@@ -59,8 +60,10 @@ const main = async () => {
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
         consoleUpdateTimer = setInterval(updateConsole, 5000);
         throttleIntervalTimer = setInterval(() => {
+            let heapSpaceStatistics = v8.getHeapSpaceStatistics()
+            let lowHeapSpace = heapSpaceStatistics.some(hss => hss.space_available_size < hss.space_size / 5 && (hss.space_name === 'code_space' || hss.space_name === 'map_space')); // Less than 20% remains
             // If we went this whole time without an error then try going faster
-            if(!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
+            if(!lowHeapSpace && !inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
                 // Speed up inserts by 1%
                 insertInterval -= (insertInterval/100);
                 console.log(`Lowering insert interval to ${insertInterval.toFixed(0)} ms`);
