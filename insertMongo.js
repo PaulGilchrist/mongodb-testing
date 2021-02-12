@@ -23,15 +23,14 @@ const mongoClientOptions = {
 const connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/'; // default mongo port
 
 let batchSize = 600;
-let consoleUpdateDelay = 5000;
 let insertInterval = 100; 
+const numContactsToCreate = 20000000;
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
 let throttleIntervalTimer = null
 
 let currentContacts = 0;
-const numContactsToCreate = 20000000; // Default 20 million
 
 let inErrorState = false;
 let timeInErrorState = Date.now();
@@ -45,7 +44,7 @@ const main = async () => {
         let count = await db.collection(collectionName).countDocuments({});
         currentContacts = count;
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
-        consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
+        consoleUpdateTimer = setInterval(updateConsole, 5000);
         throttleIntervalTimer = setInterval(() => {
             // If we went this whole time without an error then try going faster
             if(!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {

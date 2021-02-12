@@ -20,7 +20,6 @@ const mongoClientOptions = {
 const connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
 
 let batchSize = 250;
-let consoleUpdateDelay = 5000;
 let insertInterval = 250;
 const numContactsToCreate = 20000000;
 
@@ -40,7 +39,7 @@ const main = async () => {
         let count = await db.collection(collectionName).find({}).count();
         currentContacts = count;
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
-        consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
+        consoleUpdateTimer = setInterval(updateConsole, 5000);
         throttleIntervalTimer = setInterval(() => {
             // If we went this whole time without an error then try going faster
             if (!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {

@@ -74,7 +74,6 @@ const dbConfig = {
 
 
 let batchSize = 200;
-let consoleUpdateDelay = 5000;
 let insertInterval = 20;
 const numContactsToCreate = 20000000;
 
@@ -95,7 +94,7 @@ const main = async () => {
         currentContacts = result.recordset[0].currentContacts
         // Create contact
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
-        consoleUpdateTimer = setInterval(updateConsole, consoleUpdateDelay);
+        consoleUpdateTimer = setInterval(updateConsole, 5000);
         throttleIntervalTimer = setInterval(() => {
             // If we went this whole time without an error then try going faster
             if(!inErrorState && Date.now() - timeInErrorState >= insertInterval * 100) {
