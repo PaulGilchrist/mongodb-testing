@@ -14,6 +14,15 @@ spec:
         app: database
         selector: mongodb-standalone
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - docker-desktop
       containers:
       - name: mongodb-standalone
         image: mongo:latest
@@ -37,8 +46,6 @@ spec:
           readOnly: true
         - name: mongodb-data
           mountPath: /data/db
-      nodeSelector:
-        kubernetes.io/hostname: docker-desktop
       volumes:
       - name: mongo-root
         secret:
@@ -73,5 +80,5 @@ spec:
             path: mongo.conf
       - name: mongodb-data
         persistentVolumeClaim:
-          claimName: mongodb-standalone
+          claimName: mongodb-pvc
 ---

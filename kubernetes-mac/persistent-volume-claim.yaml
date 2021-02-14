@@ -1,9 +1,9 @@
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: mongodb-standalone
+  name: mongodb-pvc
 spec:
-  storageClassName: mongodb-standalone
+  storageClassName: local-sc
   accessModes:
     - ReadWriteOnce
   volumeMode: Filesystem

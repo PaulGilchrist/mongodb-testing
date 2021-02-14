@@ -4,12 +4,18 @@ Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilip
 
 ### Apply these templates as below
 ```
+# kubectl get nodes
 kubectl apply -f storageclass.yaml
+# kubectl get sc
 kubectl apply -f persistent-volume.yaml
 kubectl apply -f persistent-volume-claim.yaml
+# kubectl get pvc
 kubectl apply -f secrets.yaml
 kubectl apply -f configmap.yaml
 kubectl apply -f statefulsets.yaml
+# kubectl get pod mongodb-standalone-0
+# kubectl describe pods
+# kubectl describe pod mongodb-standalone-0
 kubectl apply -f service.yaml
 ```
 
@@ -20,6 +26,8 @@ mongo mongodb://mongodb-standalone-0.database:27017
 use training
 db.auth('training','password')
 db.users.insert({name: 'your name'})
+exit
+exit
 ```
 
 ### Alternatively expose the containers internal port to the node allowing testing through MongoDB Compass
@@ -45,16 +53,7 @@ kubectl delete service database
 kubectl delete statefulsets mongodb-standalone
 kubectl delete ConfigMap mongodb-standalone
 kubectl delete Secret mongo-root
-kubectl delete PersistentVolumeClaim mongodb-standalone
-kubectl delete PersistentVolume mongodb-standalone
-kubectl delete StorageClass mongodb-standalone
-```
-
-### Some troubleshooting commands
-```
-kubectl get nodes
-kubectl get pod mongodb-standalone-0
-kubectl describe pods
-kubectl describe pod mongodb-standalone-0
-kubectl get pvc
+kubectl delete PersistentVolumeClaim mongodb-pvc
+kubectl delete PersistentVolume mongodb-pv
+kubectl delete StorageClass local-sc
 ```
