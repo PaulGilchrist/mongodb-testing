@@ -3,7 +3,7 @@
 Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilipkumar/standalone-mongodb-on-kubernetes-cluster-19e7b5896b27), but adapted for docker desktop on Mac
 
 ### Apply these templates as below (troubleshooting steps with #)
-Make sure to first add an Azure Public IP address (standard)
+Make sure to first add an Azure Public IP address in the resource group created when the AKS cluster was created.  When creating the AKS cluster, you choose to support either standard or basic load balancers.  Based on what was choosen, make sure to make the same selection when creating the Azure IP address.
 ```
 # kubectl get nodes
 kubectl apply -f storageclass.yaml
