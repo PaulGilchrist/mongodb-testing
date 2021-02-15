@@ -11,7 +11,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-sc
   local:
-    path: /Users/Shared/mongo-root
+    path: /Users/Shared/mongodb
   nodeAffinity:
     required:
       nodeSelectorTerms:
