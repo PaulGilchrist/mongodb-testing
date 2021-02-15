@@ -21,7 +21,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                  - aks-agentpool-38048350-vmss000000
+                  - <your aks node names>
       containers:
       - name: mongodb
         image: mongo:latest

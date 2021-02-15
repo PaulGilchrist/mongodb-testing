@@ -48,7 +48,7 @@ show collections
 kubectl delete service azure-load-balancer
 kubectl delete statefulsets mongodb
 kubectl delete ConfigMap mongodb-cm
-kubectl delete Secret mongo-secret
+kubectl delete Secret mongodb-secret
 kubectl delete PersistentVolumeClaim azure-managed-disk
 kubectl delete StorageClass default-expandable
 ```

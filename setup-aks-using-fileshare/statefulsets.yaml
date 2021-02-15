@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: azure-load-balancer
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb # has to match .spec.template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: mongodb # has to match .spec.selector.matchLabels
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - <your aks node names>
+                - <your aks node names>
+                - <your aks node names>
+      containers:
+      - name: mongodb
+        command: ["mongod"] # azure files can not mount to folder with files
+        args: ["--dbpath=/data/mongoaz", "--bind_ip_all", "--auth"]
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/mongoaz  # azure files can not mount to folder with files
+      volumes:
+      - name: mongodb-data
+        azureFile:
+          secretName: mongodb-secret
+          shareName: aks-mongodb-r0-s0
+          readOnly: false
+---
