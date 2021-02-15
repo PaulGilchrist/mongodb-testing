@@ -21,9 +21,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - <your aks node names>
-                - <your aks node names>
-                - <your aks node names>
+                - <your AKS node names here>
       containers:
       - name: mongodb
         command: ["mongod"] # azure files can not mount to folder with files
@@ -37,8 +35,6 @@ spec:
           mountPath: /data/mongoaz  # azure files can not mount to folder with files
       volumes:
       - name: mongodb-data
-        azureFile:
-          secretName: mongodb-secret
-          shareName: aks-mongodb-r0-s0
-          readOnly: false
+        persistentVolumeClaim:
+          claimName: azure-file
 ---

@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    service.beta.kubernetes.io/azure-load-balancer-resource-group: <your azure aks cluster resource group name>
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: <your azure resource group name created by AKS>
   name: azure-load-balancer
 spec:
-  loadBalancerIP: <your azure public ip address> # Must be standard if AKS LoadBalancer is standard, basic if AKS LoadBalancer is basic
+  loadBalancerIP: <your azure public ip here> # Must be standard if AKS LoadBalancer is standard, basic if AKS LoadBalancer is basic
   ports:
   - protocol: TCP
     port: 27017

@@ -1,0 +1,12 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azure-file
+provisioner: kubernetes.io/azure-file
+reclaimPolicy: Retain
+parameters:
+  resourceGroup: "MC_ApiDev_mongodb-cluster_westus"
+  storageAccount: "<your azure storage account name here>" # Must be in same resource group created by AKS
+  skuName: Standard_LRS  #available values: Standard_LRS, Standard_GRS, Standard_RAGRS, (and Premium_LRS are supported from k8s v1.13.0)
+allowVolumeExpansion: true
+---

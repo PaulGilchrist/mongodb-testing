@@ -17,9 +17,8 @@ Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilip
 * Integrations
   * Connect to Azure Container Registry if one is already setup
   * Connect to an existing or create a new Log Analytics Workspace
-* Create or use existing Azure File Share
-  * Get the storage account name and key, [encode both to Base64](https://www.base64encode.org), and add them to the `secrets.yaml` file
-  * Create a file share and add its name to the `statefulsets.yaml` file
+* Create or use existing Azure File Share located within the resource group created by AKS
+  * Add the storage account name to `storageclass.yaml` 
 * Create an Azure Public IP address (standard) in the resource group created when the AKS cluster was created.
   * Add the IP address to `service.yaml`
   * Add the resource group name to the annotation in `service.yaml`
@@ -31,7 +30,8 @@ Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilip
 ### Apply these templates as below (troubleshooting steps with #)
 
 ```
-kubectl apply -f secrets.yaml
+kubectl apply -f storageclass.yaml
+kubectl apply -f persistent-volume-claim.yaml
 kubectl apply -f statefulsets.yaml
 kubectl apply -f service.yaml
 ```
@@ -77,5 +77,6 @@ mongodb://admin:password@<dns for public IP>:27017/
 ```
 kubectl delete service azure-load-balancer
 kubectl delete statefulsets mongodb
-kubectl delete Secret mongodb-secret
+kubectl delete pvc azure-file
+kubectl delete storageclass azure-file
 ```
