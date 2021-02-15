@@ -9,7 +9,7 @@ az storage account create --name acistorage3191 --resource-group ApiDev --locati
 
 az storage share create --name mongodata --account-name acistorage3191 --account-key "c+AjeswgqzgybtNwY8bQ9v3KeMtAthsup6zR56ACDE8MPcs8wrnsYkHLqcQwg4XVyxlpLGl/iZaKeN5M5w8TAw=="
 
-az container create --resource-group ApiDev --name acimongotest --image mongo:latest --azure-file-volume-account-name acistorage3191 --azure-file-volume-account-key "c+AjeswgqzgybtNwY8bQ9v3KeMtAthsup6zR56ACDE8MPcs8wrnsYkHLqcQwg4XVyxlpLGl/iZaKeN5M5w8TAw==" --azure-file-volume-share-name mongodata --azure-file-volume-mount-path "/data/mongoaz" --ports 27017 --cpu 2 --ip-address public --memory 8 --os-type Linux --protocol TCP --dns-name-label acimongotest --restart-policy OnFailure --command-line "mongod --dbpath=/data/mongoaz --bind_ip_all"
+az container create --resource-group <your azure resource group> --name acimongotest --image mongo:latest --azure-file-volume-account-name acistorage3191 --azure-file-volume-account-key "<your azure storage key here>" --azure-file-volume-share-name mongodata --azure-file-volume-mount-path "/data/mongoaz" --ports 27017 --cpu 2 --ip-address public --memory 8 --os-type Linux --protocol TCP --dns-name-label acimongotest --restart-policy OnFailure --command-line "mongod --dbpath=/data/mongoaz --bind_ip_all"
 ```
 
 Reference: [An adventure in containers and command-line tools: Running MongoDB in Azure](https://jussiroine.com/2019/02/an-adventure-in-containers-and-command-line-tools-running-mongodb-in-azure/)
