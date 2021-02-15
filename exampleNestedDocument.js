@@ -1,7 +1,9 @@
-
-// Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
-// docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
-
+'use strict';
+'use strict';
+/*
+Setup MongoDB using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
+    as documented in their respective setup folders
+*/
 const chalk = require('chalk');
 const fs = require('fs');
 const mongoClient = require('mongodb').MongoClient;

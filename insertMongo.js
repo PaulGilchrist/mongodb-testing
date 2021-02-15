@@ -1,13 +1,8 @@
 'use strict';
-
 /*
-Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
-    docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest
-Connection String = mongodb://localhost:27017/
-This file completed 20 million documents, each with 3 additional sub objects (80 million total objects) in under 30 minutes with < 4 vCPU and <4GB memory
-If using CosmosDB rather than MongoDB, make sure to index $** and the Mongo driver for CosmosDB does not auto-index
+Setup MongoDB using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
+    as documented in their respective setup folders
 */
-
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;

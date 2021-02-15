@@ -1,10 +1,8 @@
 'use strict';
 /*
-Before running this code, run insertMongo.js (and follow its setup steps)
-Also make sure to place environment variables in nodemon.json and run with nodemon
-    or have needed environment settings, or pass them in with node
+Setup MongoDB using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
+    as documented in their respective setup folders
 */
-
 const chalk = require('chalk');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const mongoClient = require('mongodb').MongoClient;

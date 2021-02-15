@@ -1,6 +1,9 @@
 # mongodb-testing
 Used to learn MongoDB capabilities and differences from relational databases.  Also used to do performance comparisons between Microsoft SQL server and MongoDB.
 
+## Setup
+Full setup instructions exist for setting up both MongoDB and SQL server using Docker Desktop, Azure Container Instance, or Kubernetes (both local and Azure).
+
 ## Example Files
 `exampleCrossCollection.js` shows how to join multiple MongoDB collections together in queries similar to how SQL would.
 
@@ -20,7 +23,7 @@ Compare MSSQL against document database inserting 20 million contacts, (80 milli
   * `Twice the size and cost of Mongo DB yet still 10-54x slower`
 * Cosmos DB (serverless)
   * Insert = 3520 records per second (`2x improvement`)
-  * Read = 1200 ms (`4x improvement`)
+  * Read = 230 ms (`21x improvement`)
 * Cosmos DB (10k RU/s max)
   * Insert = 7200 records per second (`4x improvement`)
   * Cost = $584 per month

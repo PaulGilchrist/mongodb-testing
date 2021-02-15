@@ -1,54 +1,6 @@
 'use strict';
-
 /*
-https://hub.docker.com/_/microsoft-mssql-server
-Must run this on amd64 architecture (Mac M1 ARM64 not supported)
-docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Passw0rd -p 1433:1433' -e 'MSSQL_PID=Standard' -d mcr.microsoft.com/mssql/server:2019-latest
-connect to Database using SSMS or Azure Data Studio and create the needed tables (without indexes at this stage)
-CREATE TABLE [dbo].[contacts] (
-    [id] INT IDENTITY (1, 1) NOT NULL,
-    [firstName] NVARCHAR (50) NOT NULL,
-    [lastName] NVARCHAR (50) NOT NULL,
-    [displayName] NVARCHAR (200) NULL,
-    CONSTRAINT [pk_contacts] PRIMARY KEY CLUSTERED ([id] ASC)
-);
-GO
-CREATE TABLE [dbo].[addresses] (
-    [id] INT IDENTITY (1, 1) NOT NULL,
-    [contactId] INT NOT NULL,
-    [street] NVARCHAR (50) NOT NULL,
-    [city] NVARCHAR (50) NOT NULL,
-    [state] NVARCHAR (50) NOT NULL,
-    [zip] NVARCHAR (10) NOT NULL,
-    CONSTRAINT [pk_addresses] PRIMARY KEY CLUSTERED ([id] ASC),
-    CONSTRAINT [fk_addresses_contacts] FOREIGN KEY ([contactId]) REFERENCES [dbo].[contacts] ([id])
-);
-GO
-CREATE TABLE [dbo].[emails] (
-    [id] INT IDENTITY (1, 1) NOT NULL,
-    [contactId] INT NOT NULL,
-    [email] NVARCHAR (50) NOT NULL,
-    CONSTRAINT [pk_emails] PRIMARY KEY CLUSTERED ([id] ASC),
-    CONSTRAINT [fk_emails_contacts] FOREIGN KEY ([contactId]) REFERENCES [dbo].[contacts] ([id])
-);
-GO
-CREATE TABLE [dbo].[phones] (
-    [id] INT IDENTITY (1, 1) NOT NULL,
-    [contactId] INT NOT NULL,
-    [phoneNumber] NVARCHAR (50) NOT NULL,
-    CONSTRAINT [pk_phones] PRIMARY KEY CLUSTERED ([id] ASC),
-    CONSTRAINT [fk_phones_contacts] FOREIGN KEY ([contactId]) REFERENCES [dbo].[contacts] ([id])
-);
-GO
-You can later check that records are being inserted successfully with the following query
-select c.id, c.firstName, c.lastName, a.street, a.city, a.state, a.zip, e.email, p.phoneNumber
-    from dbo.contacts c
-        left outer join addresses a on a.contactId=c.id
-        left outer join emails e on e.contactId=c.id
-        left outer join phones p on p.contactId=c.id
-
-This file completed 80 million rows in around 24 hours with 8 vCPU and 24GB memory (running about 45% utilized)
-    Need to test again, as SQL was remote (Azuer SQL Database), where Mongo was local, however network load was under 10%
+Setup SQL using the documentation provided in the setup-sql folder
 */
 
 const faker = require('faker/locale/en_US');

@@ -1,36 +1,7 @@
+'use strict';
 /*
-Before running this code, run the docker command below to install and start mongodb (change DB path if needed)
-    docker run -d -p 27017:27017 -v ~/Temp/mongo-testing/db:/data/db --name mongo-testing-db mongo:latest --replSet rs0
-Next, connect to your running container through the Docker dashboard, run "mongo" shell, and initiate the new Replica Set using command "rs.initiate()"
-    or remove the section of this code that demonstrates a transaction (transactions require a replica set, even if a set of 1 node
-If building a multi-node replica set - https://www.sohamkamani.com/blog/2016/06/30/docker-mongo-replica-set/
-    docker network create my-mongo-cluster
-    docker run -d -p 30001:27017 --name mongo1 -v ~/Temp/mongo-testing/db:/data/db --net my-mongo-cluster mongo:latest --replSet my-mongo-set
-    docker run -d -p 30002:27017 --name mongo2 -v ~/Temp/mongo-testing/db:/data/db --net my-mongo-cluster mongo:latest --replSet my-mongo-set
-    docker run -d -p 30003:27017 --name mongo3 -v ~/Temp/mongo-testing/db:/data/db --net my-mongo-cluster mongo:latest --replSet my-mongo-set
-    Run the following command from the terminal on mongo1
-        > db = (new Mongo('localhost:27017')).getDB('crossCollection')
-        test
-        > config = {
-            "_id" : "my-mongo-set",
-            "members" : [
-                {
-                    "_id" : 0,
-                    "host" : "mongo1:27017"
-                },
-                {
-                    "_id" : 1,
-                    "host" : "mongo2:27017"
-                },
-                {
-                    "_id" : 2,
-                    "host" : "mongo3:27017"
-                }
-            ]
-        }
-        > rs.initiate(config)
-        { "ok" : 1 }
-    Better would be to use Kubernetes or docker-compose
+Setup MongoDB using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
+    as documented in their respective setup folders
 */
 const chalk = require('chalk');
 const mongoClient = require('mongodb').MongoClient;

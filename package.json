@@ -5,8 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "insertCosmosDB": "nodemon insertCosmosDB",
+    "insertMongo": "nodemon insertMongo",
     "insertSql": "nodemon insertSql",
+    "perfTestMongo": "nodemon perfTestMongo",
     "perfTestSql": "nodemon perfTestSql"
   },
   "author": "Paul Gilchrist",
