@@ -5,7 +5,7 @@ metadata:
 provisioner: kubernetes.io/azure-disk
 reclaimPolicy: Retain
 parameters:
-  storageaccounttype: Standard_LRS
+  storageaccounttype: Premium_LRS
   kind: Managed
 allowVolumeExpansion: true
 ---
