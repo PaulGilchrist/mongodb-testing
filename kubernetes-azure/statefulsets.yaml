@@ -1,18 +1,17 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongodb-standalone
+  name: mongodb
 spec:
-  serviceName: database
+  serviceName: azure-load-balancer
   replicas: 1
   selector:
     matchLabels:
-      app: database
+      app: mongodb # has to match .spec.template.metadata.labels
   template:
     metadata:
       labels:
-        app: database
-        selector: mongodb-standalone
+        app: mongodb # has to match .spec.selector.matchLabels
     spec:
       affinity:
         nodeAffinity:
@@ -24,19 +23,19 @@ spec:
                 values:
                   - aks-agentpool-38048350-vmss000000
       containers:
-      - name: mongodb-standalone
+      - name: mongodb
         image: mongo:latest
         env:
           - name: MONGO_INITDB_ROOT_USERNAME_FILE
-            value: /etc/mongo-root/admin/MONGO_ROOT_USERNAME
+            value: /etc/mongodb-secret/admin/MONGO_ROOT_USERNAME
           - name: MONGO_INITDB_ROOT_PASSWORD_FILE
-            value: /etc/mongo-root/admin/MONGO_ROOT_PASSWORD
+            value: /etc/mongodb-secret/admin/MONGO_ROOT_PASSWORD
         ports:
         - containerPort: 27017
-          name: mongo
+          name: mongodb
         volumeMounts:
-        - name: mongo-root
-          mountPath: /etc/mongo-root
+        - name: mongodb-secret
+          mountPath: /etc/mongodb-secret
           readOnly: true
         - name: mongodb-scripts
           mountPath: /docker-entrypoint-initdb.d
@@ -47,9 +46,9 @@ spec:
         - name: mongodb-data
           mountPath: /data/db
       volumes:
-      - name: mongo-root
+      - name: mongodb-secret
         secret:
-          secretName: mongo-root
+          secretName: mongodb-secret
           items:
           - key: MONGO_ROOT_USERNAME
             path: admin/MONGO_ROOT_USERNAME
@@ -68,13 +67,13 @@ spec:
             mode: 0444
       - name: mongodb-scripts
         configMap:
-          name: mongodb-standalone
+          name: mongodb-cm
           items:
           - key: ensure-users.js
             path: ensure-users.js
       - name: mongodb-conf
         configMap:
-          name: mongodb-standalone
+          name: mongodb-cm
           items:
           - key: mongo.conf
             path: mongo.conf
