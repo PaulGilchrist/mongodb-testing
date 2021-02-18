@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb2-pvc
+spec:
+  storageClassName: local-sc
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  volumeName: mongodb2-pv
+  resources:
+    requests:
+      storage: 1Gi
+---

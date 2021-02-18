@@ -5,20 +5,22 @@ Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilip
 ### Apply these templates as below (troubleshooting steps with #)
 Make sure to first add an Azure Public IP address in the resource group created when the AKS cluster was created.  When creating the AKS cluster, you choose to support either standard or basic load balancers.  Based on what was choosen, make sure to make the same selection when creating the Azure IP address.
 ```
-# kubectl get nodes
 kubectl apply -f storageclass.yaml
-# kubectl get sc
 kubectl apply -f persistent-volume-claim.yaml
-# kubectl get pvc
 kubectl apply -f secrets.yaml
 kubectl apply -f configmap.yaml
 kubectl apply -f statefulsets.yaml
-# kubectl get pod mongodb-0
-# kubectl describe pods
-# kubectl describe pod mongodb-0
 kubectl apply -f service.yaml
-# kubectl get services
-# kubectl describe service azure-load-balancer
+```
+
+### Optional troubleshooting commands
+
+```
+kubectl get pod mongodb-0
+kubectl describe pods
+kubectl describe pod mongodb-0
+kubectl get services
+kubectl describe service azure-load-balancer
 ```
 
 ### Connect to the container's console and test

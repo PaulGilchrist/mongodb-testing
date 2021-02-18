@@ -2,7 +2,7 @@
 Used to learn MongoDB capabilities and differences from relational databases.  Also used to do performance comparisons between Microsoft SQL server and MongoDB.
 
 ## Setup
-Full setup instructions exist for setting up both MongoDB and SQL server using Docker Desktop, Azure Container Instance, or Kubernetes (both local and Azure).
+Full setup instructions exist for setting up both MongoDB and SQL server using Docker Desktop, Azure Container Instance, or Kubernetes (both local and Azure, and using both Azure disk and/or Azure file share persisted storage).  Azure File Share persisted storage is recommended for its snapshot and backup capabilities.
 
 ## Example Files
 `exampleCrossCollection.js` shows how to join multiple MongoDB collections together in queries similar to how SQL would.

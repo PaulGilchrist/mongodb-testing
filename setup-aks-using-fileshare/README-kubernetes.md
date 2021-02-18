@@ -27,7 +27,7 @@ Based off - [Standalone Mongodb on Kubernetes Cluster](https://medium.com/@dilip
   * Upload the files in this folder to the Azure CLI
 
 
-### Apply these templates as below (troubleshooting steps with #)
+### Apply these templates as below
 
 ```
 kubectl apply -f storageclass.yaml
@@ -39,11 +39,11 @@ kubectl apply -f service.yaml
 ### Optional troubleshooting commands
 
 ```
-# kubectl get pod mongodb-0
-# kubectl describe pods
-# kubectl describe pod mongodb-0
-# kubectl get services
-# kubectl describe service azure-load-balancer
+kubectl get pod mongodb-0
+kubectl describe pods
+kubectl describe pod mongodb-0
+kubectl get services
+kubectl describe service azure-load-balancer
 ```
 
 Since Azure file share does not allow mounting to `/data/db` since there are already files there, there are some extra steps to perform.  In summary, we will need to manually add user credentials, then change `statefulsets.yaml` to force authentication

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb2
+spec:
+  serviceName: mongodb2-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb2 # has to match .spec.template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: mongodb2 # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: mongodb2
+        command: ["mongod"]
+        args: ["--dbpath=/data/db", "--bind_ip_all", "--auth", "--keyFile", "/data/db/keyfile"] # , "--replSet", "rs0"
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db # must match configmap dbPath and "command" args
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb2-pvc
+---

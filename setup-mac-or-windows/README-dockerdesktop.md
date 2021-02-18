@@ -1,12 +1,14 @@
 # Docker Desktop Setup
 
-Before running this code, run the [Docker Desktop](https://www.docker.com/products/docker-desktop) command below to install and start mongodb (change DB path if needed)
+Before running this code, run the [Docker Desktop](https://www.docker.com/products/docker-desktop) command below to install and start mongodb (change DB path, username, and password as needed).
+
+* Make sure to choose a path that exists, or create it before running the Docker command.  The above example is for MacOS, but would not pre-exist for Windows users
 
 ```
-docker run -d -p 27017:27017 -v /Users/Shared/mongodb:/data/db --name mongodb mongo:latest --replSet rs0
+docker run -d --name mongodb -p 27017:27017 -v /Users/Shared/mongodb:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=password mongo:latest --replSet rs0
 ```
 
-* Make sure to choose a path that exists.  The above example is for MacOS, but would not pre-exist for Windows users
+Username and password will only be writting into a newly created persisted storage location, and will be ignored if an "admin" database pre-existed. 
 
 Next, connect to your running container through the Docker dashboard and run the `mongo` shell, and initiate the new Replica Set using command `rs.initiate()` or remove the section of this code that demonstrates a transaction.  Transactions require a replica set, even if it is a set with only 1 node.
 
@@ -16,34 +18,28 @@ If building a multi-node replica set (see [Creating a MongoDB replica set using 
 
 ```
 docker network create mongodb-cluster
-docker run -d -p 30001:27017 --name mongodb1 -v /Users/Shared/mongodb1:/data/db --net mongodb-cluster mongo:latest --replSet rs0
-docker run -d -p 30002:27017 --name mongodb2 -v /Users/Shared/mongodb2:/data/db --net mongodb-cluster mongo:latest --replSet rs0
-docker run -d -p 30003:27017 --name mongodb3 -v /Users/Shared/mongodb3:/data/db --net mongodb-cluster mongo:latest --replSet rs0
+
+docker run -d --name mongodb0 -p 27017:27017 --net mongodb-cluster -v /Users/Shared/mongodb0:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=password mongo:latest --replSet rs0
+
+docker run -d --name mongodb1 -p 27018:27017 --net mongodb-cluster -v /Users/Shared/mongodb1:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=password mongo:latest --replSet rs0
+
+docker run -d --name mongodb2 -p 27019:27017 --net mongodb-cluster -v /Users/Shared/mongodb2:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=password mongo:latest --replSet rs0
 ```
 
-Run the following command from the terminal on mongodb1
+Run the following command from the terminal on mongodb0 to setup replica set members for any given database
 
 ```
-db = (new Mongo('localhost:27017')).getDB('database-name')
-config = {
-    "_id" : "rs0",
-    "members" : [
-        {
-            "_id" : 0,
-            "host" : "mongodb1:27017"
-        },
-        {
-            "_id" : 1,
-            "host" : "mongodb2:27017"
-        },
-        {
-            "_id" : 2,
-            "host" : "mongodb3:27017"
-        }
-    ]
-}
-rs.initiate(config)
+rs.initiate( {
+   _id : "rs0",
+   members: [
+      { _id: 0, host: "mongodb0:27017" },
+      { _id: 1, host: "mongodb1:27017" },
+      { _id: 2, host: "mongodb2:27017" }
+   ]
+})
 ```
+
+You can then view the configuration using `rs.conf()` and `rs.status()`
 
 * Better would be to use Kubernetes or docker-compose
 
@@ -52,7 +48,17 @@ Follow by adding to or creating a `nodemon.json` file with the below environment
 ```json
 {
     "env": {
-        "mongoDbConnectionString": "mongodb://localhost:27017",
+        "mongoDbConnectionString": "admin:password@mongodb://localhost:27017/?authSource=admin&replicaSet=rs0",
+    }
+}
+```
+
+Or if connecting to a full replica set
+
+```json
+{
+    "env": {
+        "mongoDbConnectionString": "admin:password@mongodb://localhost:27017,localhost:27018,localhost:27019/?authSource=admin&replicaSet=rs0",
     }
 }
 ```
