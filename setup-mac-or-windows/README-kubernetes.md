@@ -2,7 +2,25 @@
 
 Start with the creation of three folders named mongodb0, mongodb1, and mongodb2 located at `/Users/Shared`.  These folders can be moved to any other root folder, as long as the 3 files named mongodb0-pv.yaml, mongodb1-pv.yaml, and mongodb2-pv.yaml have their `spec.local.path` changed accordingly.
 
-1) Apply the templates needed to setup the first pod
+To simulate public DNS names, edit local /private/etc/hosts/hosts.d file adding the following names:
+
+1) The nodes have internal hostnames that are used to initiate the replica set, but external clients can't resolve those names.  In order to get this to work, you will want the MongoDB pods to use the same DNS names as external clients.  To simulate public DNS names on a Mac computer you would modify the `/private/etc/hosts/hosts.d` file adding the following lines:
+
+```
+127.0.0.1	mongodb0.pgtech.com
+127.0.0.1	mongodb1.pgtech.com
+127.0.0.1	mongodb2.pgtech.com
+```
+
+2) To support persistent storage for each mongodb pod, create 3 new directories located on teh mac at `/Users/Shared` names `mongodb0`, `mongodb1`, and `mongodb2`
+
+3) Create a keyfile using the following commands, then copy it into the persistent volume for each pod (/Users/Shared/mongodb0, 1, & 2)
+
+```
+openssl rand -base64 756 > <path-to-keyfile>
+```
+
+4) Apply the templates needed to setup the first pod
 
 ```
 kubectl apply -f storageclass.yaml
@@ -13,7 +31,7 @@ kubectl apply -f mongodb0-ss.yaml
 kubectl apply -f mongodb0-service.yaml
 ```
 
-2) Optional troubleshooting commands
+5) Optional troubleshooting commands
 
 ```
 kubectl describe pvc
@@ -26,7 +44,7 @@ kubectl logs -f=true mongodb0-0
 command: ["sleep", "infinity"] # used to start container without launching mondod,  then enter container and start manually to observe any errors
 ```
 
-3) If wanting to build a 2 or 3 node replica set, execute the following commands
+6) If wanting to build a 2 or 3 node replica set, execute the following commands
 
 ```
 kubectl apply -f mongodb1-pvc.yaml
@@ -40,17 +58,13 @@ kubectl apply -f mongodb2-ss.yaml
 kubectl apply -f mongodb2-service.yaml
 ```
 
-4) Create a keyfile using the following commands, then copy it into the persistent volume for each pod (/Users/Shared/mongodb0, 1, & 2)
+Here we need to add DNS entries to K8s CName mongodb0.pgtech.com to mongodb0-service
 
-```
-openssl rand -base64 756 > <path-to-keyfile>
-```
 
-5) Since `--auth` is being required, but no accounts have yet been setup, you will not be able to remotely connect at this time, and must first setup an admin and/or user accounts
+7) Since `--auth` is being required, but no accounts have yet been setup, you will not be able to remotely connect at this time, and must first setup an admin and/or user accounts. At this same time, we will also set the appropriate permissions on the keyfile we created earlier. Finally we will modify the hosts.d file to recognize each pods public external DNS name
 
 ```
 kubectl exec  mongodb0-0 -i -- bash
-kubectl exec -it mongodb0-0 sh
 chmod 400 /data/db/keyfile
 mongo
 use admin

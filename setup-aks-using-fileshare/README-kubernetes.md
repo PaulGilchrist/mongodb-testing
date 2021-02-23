@@ -46,7 +46,7 @@ kubectl get services
 kubectl describe service azure-load-balancer
 ```
 
-Since Azure file share does not allow mounting to `/data/db` since there are already files there, there are some extra steps to perform.  In summary, we will need to manually add user credentials, then change `statefulsets.yaml` to force authentication
+Since Azure file share does not allow mounting to `/data/db` since there are already files there, there are some extra steps to perform.  In summary, we will need to manually add user credentials before we can remotly connect.
 
 ### Connect to the container's console and setup admin and other user accounts
 ```
