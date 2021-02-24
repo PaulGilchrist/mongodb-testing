@@ -88,9 +88,9 @@ rs.initiate(
   {
     _id : "rs0",
     members: [
-      { _id: 0, host: "acimongotest.westus.azurecontainer.io:27017" },
-      { _id: 1, host: "acimongotest.eastus.azurecontainer.io:27017" },
-      { _id: 2, host: "acimongotest.southcentralus.azurecontainer.io:27017" }
+      { _id: 0, host: "acimongotest.westus.azurecontainer.io:27017", priority: 3 },
+      { _id: 1, host: "acimongotest.eastus.azurecontainer.io:27017", priority: 2 },
+      { _id: 2, host: "acimongotest.southcentralus.azurecontainer.io:27017", priority: 1 }
     ]
   }
 )

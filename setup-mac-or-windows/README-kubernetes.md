@@ -127,9 +127,9 @@ rs.initiate(
   {
     _id : "rs0",
     members: [
-      { _id: 0, host: "mongodb0-service:27017" },
-      { _id: 1, host: "mongodb1-service:27018" },
-      { _id: 2, host: "mongodb2-service:27019" }
+      { _id: 0, host: "mongodb0-service:27017", priority: 2 },
+      { _id: 1, host: "mongodb1-service:27018", priority: 1 },
+      { _id: 2, host: "mongodb2-service:27019", priority: 1 }
     ]
   }
 )

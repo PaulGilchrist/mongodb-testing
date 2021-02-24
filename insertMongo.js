@@ -9,7 +9,7 @@ const mongoClient = require('mongodb').MongoClient;
 const v8 = require('v8');
 
 // Configuration
-const environment = 'cosmosDbProvisioned'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
+const environment = 'mongoDb'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
 let batchSize = 500;
 let insertInterval = 250; 
 const numContactsToCreate = 20000000;
