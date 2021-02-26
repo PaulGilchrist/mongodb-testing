@@ -17,7 +17,8 @@
     "faker": "^5.3.1",
     "minimist": "^1.2.5",
     "mongodb": "^3.6.2",
-    "mssql": "^6.3.1"
+    "mssql": "^6.3.1",
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "@types/chalk": "2.2.0",
@@ -25,6 +26,7 @@
     "@types/minimist": "^1.2.1",
     "@types/mongodb": "^3.6.4",
     "@types/mssql": "^6.0.7",
+    "@types/redis": "2.8.6",
     "nodemon": "^2.0.7"
   }
 }

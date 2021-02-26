@@ -1,40 +1,29 @@
 'use strict';
 /*
-Setup MongoDB using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
+Setup Redis using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
     as documented in their respective setup folders
 */
 const faker = require('faker/locale/en_US');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
-const mongoClient = require('mongodb').MongoClient;
+const redis = require("redis");
+const { promisify } = require("util");
 const v8 = require('v8');
 
 // Configuration
-const environment = 'mongoDb'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
-let batchSize = 2000; // Recommend 500 for remote server
+let batchSize = 5000; // Recommend 500 for remote server
 let insertInterval = 1; // Recommend 150-250 for remote server
 const numContactsToCreate = 20000000;
 
 // Global variables
-let client = null;
-const collectionName = 'contacts';
-let db = null;
-const dbName = 'mongotest';
-const mongoClientOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-};
 
-let connectionString = null;
-switch (environment) {
-    case 'cosmosDbProvisioned':
-        connectionString = args['cosmosDbProvisionedConnectionString'] || process.env.cosmosDbProvisionedConnectionString;
-        break;
-    case 'cosmosDbServerless':
-        connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
-        break;
-    default:
-        connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/';
-}
+const redisClientOptions = {
+    host: "127.0.0.1",
+    port: 6379
+};
+let client = redis.createClient(redisClientOptions);
+const dbsizeAsync = promisify(client.dbsize).bind(client);
+const msetAsync = promisify(client.mset).bind(client);
+const setAsync = promisify(client.set).bind(client);
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
@@ -47,10 +36,8 @@ let timeInErrorState = Date.now();
 
 const main = async () => {
     try {
-        client = await mongoClient.connect(connectionString, mongoClientOptions);
-        db = client.db(dbName);
         // Determine how many contacts currently exist
-        let count = await db.collection(collectionName).countDocuments({});
+        let count = await dbsizeAsync();
         currentContacts = count;
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
         consoleUpdateTimer = setInterval(updateConsole, 5000);
@@ -58,17 +45,17 @@ const main = async () => {
             let heapSpaceStatistics = v8.getHeapSpaceStatistics()
             let lowHeapSpace = heapSpaceStatistics.some(hss => hss.space_available_size < hss.space_size / 5 && (hss.space_name === 'code_space' || hss.space_name === 'map_space')); // Less than 20% remains
             // If we went this whole time without an error then try going faster
-            if(!lowHeapSpace && !inErrorState && Date.now() - timeInErrorState >= insertInterval * 100 && insertInterval > 1) {
+            if (!lowHeapSpace && !inErrorState && Date.now() - timeInErrorState >= insertInterval * 100 && insertInterval > 1) {
                 // Speed up inserts by 1%
-                insertInterval -= (insertInterval/100);
+                insertInterval -= (insertInterval / 100);
                 console.log(`Lowering insert interval to ${insertInterval.toFixed(0)} ms`);
                 clearInterval(insertIntervalTimer);
                 insertIntervalTimer = setInterval(insertContacts, insertInterval);
             }
         }, insertInterval * 200);
-    } catch(err) {
-        if(client) {
-            client.close();
+    } catch (err) {
+        if (client) {
+            client.quit();
         }
         console.log(err);
     }
@@ -78,19 +65,19 @@ const close = () => {
     clearInterval(consoleUpdateTimer);
     clearInterval(insertIntervalTimer);
     clearInterval(throttleIntervalTimer);
-    client.close();
-    console.log(`Currently inserted contacts = ${currentContacts}`);    
+    client.quit();
+    console.log(`Currently inserted contacts = ${currentContacts}`);
 }
 
 const insertContacts = () => {
     try {
-        if(currentContacts>=numContactsToCreate) {
+        if (currentContacts >= numContactsToCreate) {
             close();
             return;
         }
-        if(!inErrorState) {
-            let contacts = [];
-            for(let i = 0; i < batchSize; i++) {
+        if (!inErrorState) {
+            let msetArray = [];
+            for (let i = 0; i < batchSize; i++) {
                 const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
                 const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
                 const contact = {
@@ -115,16 +102,17 @@ const insertContacts = () => {
                             phoneNumber: faker.phone.phoneNumber()
                         }
                     ]
-                }            
-                contacts.push(contact);
+                }
+                msetArray.push(uuidv4());
+                msetArray.push(JSON.stringify(contact));
             }
-            db.collection(collectionName).insertMany(contacts).then(result => {
+            msetAsync(msetArray).then(result => {
                 currentContacts += batchSize;
             }).catch(err => {
                 setErrorState(err);
             });
-        }        
-    } catch {
+        }
+    } catch(err) {
         console.log(err);
         close();
     }
@@ -136,7 +124,7 @@ const setErrorState = (error) => {
         timeInErrorState = Date.now();
         // Do not leave this error state until a delay has passed
         let currentThrottleDelay = insertInterval * 100;
-        if(error.code === 50) {
+        if (error.code === 50) {
             currentThrottleDelay = insertInterval * 300;
             console.warn(`ExceededTimeLimit. Pausing for ${currentThrottleDelay.toFixed(0)} ms`)
         } else {
@@ -147,7 +135,7 @@ const setErrorState = (error) => {
             timeInErrorState = Date.now();
         }, currentThrottleDelay);
         // Slow down future inserts by 5%
-        insertInterval += (insertInterval/20);
+        insertInterval += (insertInterval / 20);
         console.log(`Raising insert interval to ${insertInterval} ms`);
         clearInterval(insertIntervalTimer);
         insertIntervalTimer = setInterval(insertContacts, insertInterval);
@@ -156,6 +144,13 @@ const setErrorState = (error) => {
 
 const updateConsole = () => {
     console.log(`Inserting ${currentContacts} of ${numContactsToCreate}`);
+}
+
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 main();
