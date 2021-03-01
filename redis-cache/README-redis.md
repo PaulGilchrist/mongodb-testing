@@ -1,11 +1,9 @@
 # Docker Desktop Setup for Persistent Redis on Mac OS
 
-Before running this code, run the [Docker Desktop](https://www.docker.com/products/docker-desktop) command below to install and start Redis (change DB path as needed).
-
-* Make sure to choose a path that exists, or create it before running the Docker command.  The above example is for MacOS, but would not pre-exist for Windows users
+Run the following command, but only after first creating the local folder that the command references.  The `--save` command means is 10 millions writes occur within 60 seconds, write them to disk.  Feel free to tune this as needed.
 
 ```
-docker run -d --name redis-cache -p 6379:6379 -v /Users/Shared/redis:/data redis:latest redis-server --save 60 1
+docker run -d --name redis-cache -p 6379:6379 -v /Users/Shared/redis:/data redis:latest redis-server --save 60 10000000
 ```
 
 Use the Docker desktop dashboard to connect to the Redis console and then execute the command `redis-cli` to confirm proper functioning optionally testing the below example commands
@@ -28,7 +26,7 @@ dbsize
 quit
 ```
 
-A full list of command can be found [here](https://redis.io/commands)
+A full list of commands can be found [here](https://redis.io/commands)
 
 ## Data setup 
 

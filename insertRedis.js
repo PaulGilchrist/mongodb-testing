@@ -2,148 +2,134 @@
 /*
 Setup Redis using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
     as documented in their respective setup folders
+
+    Recommend the RedisInsight client when requiring a GUI
 */
 const faker = require('faker/locale/en_US');
+const { exit } = require('process');
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
 const redis = require("redis");
-const { promisify } = require("util");
 const v8 = require('v8');
 
 // Configuration
-let batchSize = 5000; // Recommend 500 for remote server
-let insertInterval = 1; // Recommend 150-250 for remote server
+let batchSize = 2000;
+let insertInterval = 500;
 const numContactsToCreate = 20000000;
+const consoleUpdateRate = Math.max(insertInterval * 2, 1000); // Must be larger than insertInterval
 
 // Global variables
 
-const redisClientOptions = {
-    host: "127.0.0.1",
-    port: 6379
-};
-let client = redis.createClient(redisClientOptions);
-const dbsizeAsync = promisify(client.dbsize).bind(client);
-const msetAsync = promisify(client.mset).bind(client);
-const setAsync = promisify(client.set).bind(client);
+const redisHost = args['redisHost'] || process.env.redisHost || 'localhost';
+const redisKey = args['redisKey'] || process.env.redisKey || null;
+const redisPort = args['redisPort'] || process.env.redisPort || 6379
+let client = null
+if(redisKey) {
+    client = redis.createClient(redisPort, redisHost, {auth_pass: redisKey, tls: {servername: redisHost}});
+} else {
+     client = redis.createClient(redisPort, redisHost);
+}
+
+client.on("error", (err) => {
+    console.log('Main error handler');
+    console.log(JSON.stringify(err));
+    if(err.code==='ECONNREFUSED' || err.code==='ECONNRESET') {
+        process.exit(err.errno);
+    }
+});
 
 let consoleUpdateTimer = null;
 let insertIntervalTimer = null;
-let throttleIntervalTimer = null
-
+let previousInsertRate = 0;
+let previousContacts = 0;
 let currentContacts = 0;
-
-let inErrorState = false;
-let timeInErrorState = Date.now();
+let rateCounter = 0; // Count up each time inserts increase, and down each time inserts decrease
+const rateLimit = 5;
 
 const main = async () => {
-    try {
-        // Determine how many contacts currently exist
-        let count = await dbsizeAsync();
-        currentContacts = count;
-        insertIntervalTimer = setInterval(insertContacts, insertInterval);
-        consoleUpdateTimer = setInterval(updateConsole, 5000);
-        throttleIntervalTimer = setInterval(() => {
-            let heapSpaceStatistics = v8.getHeapSpaceStatistics()
-            let lowHeapSpace = heapSpaceStatistics.some(hss => hss.space_available_size < hss.space_size / 5 && (hss.space_name === 'code_space' || hss.space_name === 'map_space')); // Less than 20% remains
-            // If we went this whole time without an error then try going faster
-            if (!lowHeapSpace && !inErrorState && Date.now() - timeInErrorState >= insertInterval * 100 && insertInterval > 1) {
-                // Speed up inserts by 1%
-                insertInterval -= (insertInterval / 100);
-                console.log(`Lowering insert interval to ${insertInterval.toFixed(0)} ms`);
-                clearInterval(insertIntervalTimer);
-                insertIntervalTimer = setInterval(insertContacts, insertInterval);
-            }
-        }, insertInterval * 200);
-    } catch (err) {
-        if (client) {
-            client.quit();
+    // Determine how many contacts currently exist
+    client.dbsize((err, count) => {
+        if (err) {
+            console.log('DBSIZE error handler');
+            console.log(err);
+            process.exit(err.errno);
         }
-        console.log(err);
-    }
+        currentContacts = previousContacts = count;
+        insertIntervalTimer = setInterval(insertContacts, insertInterval);
+        consoleUpdateTimer = setInterval(updateConsole, consoleUpdateRate);
+    });
 }
 
 const close = () => {
     clearInterval(consoleUpdateTimer);
     clearInterval(insertIntervalTimer);
-    clearInterval(throttleIntervalTimer);
     client.quit();
     console.log(`Currently inserted contacts = ${currentContacts}`);
 }
 
 const insertContacts = () => {
-    try {
-        if (currentContacts >= numContactsToCreate) {
-            close();
-            return;
-        }
-        if (!inErrorState) {
-            let msetArray = [];
-            for (let i = 0; i < batchSize; i++) {
-                const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
-                const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
-                const contact = {
-                    firstName,
-                    lastName,
-                    displayName: `${firstName} ${lastName}`,
-                    addresses: [
-                        {
-                            street: faker.address.streetAddress().replace(/[^0-9a-zA-Z ]/g, ''),
-                            city: faker.address.city().replace(/[^a-zA-Z ]/g, ''),
-                            state: faker.address.stateAbbr(),
-                            zip: faker.address.zipCode()
-                        }
-                    ],
-                    emails: [
-                        {
-                            email: faker.internet.email(firstName, lastName).replace(/[^a-zA-Z@\. ]/g, '')
-                        }
-                    ],
-                    phones: [
-                        {
-                            phoneNumber: faker.phone.phoneNumber()
-                        }
-                    ]
-                }
-                msetArray.push(uuidv4());
-                msetArray.push(JSON.stringify(contact));
-            }
-            msetAsync(msetArray).then(result => {
-                currentContacts += batchSize;
-            }).catch(err => {
-                setErrorState(err);
-            });
-        }
-    } catch(err) {
-        console.log(err);
+    if (currentContacts >= numContactsToCreate) {
         close();
+        return;
     }
-}
-
-const setErrorState = (error) => {
-    if (error && !inErrorState) {
-        inErrorState = true;
-        timeInErrorState = Date.now();
-        // Do not leave this error state until a delay has passed
-        let currentThrottleDelay = insertInterval * 100;
-        if (error.code === 50) {
-            currentThrottleDelay = insertInterval * 300;
-            console.warn(`ExceededTimeLimit. Pausing for ${currentThrottleDelay.toFixed(0)} ms`)
-        } else {
-            console.error(error);
+    let batch = client.batch();
+    for (let i = 0; i < batchSize; i++) {
+        const firstName = faker.name.firstName().replace(/[^a-zA-Z ]/g, '');
+        const lastName = faker.name.lastName().replace(/[^a-zA-Z ]/g, '');
+        const contact = {
+            firstName,
+            lastName,
+            displayName: `${firstName} ${lastName}`,
+            addresses: [
+                {
+                    street: faker.address.streetAddress().replace(/[^0-9a-zA-Z ]/g, ''),
+                    city: faker.address.city().replace(/[^a-zA-Z ]/g, ''),
+                    state: faker.address.stateAbbr(),
+                    zip: faker.address.zipCode()
+                }
+            ],
+            emails: [
+                {
+                    email: faker.internet.email(firstName, lastName).replace(/[^a-zA-Z@\. ]/g, '')
+                }
+            ],
+            phones: [
+                {
+                    phoneNumber: faker.phone.phoneNumber()
+                }
+            ]
         }
-        setTimeout(() => {
-            inErrorState = false;
-            timeInErrorState = Date.now();
-        }, currentThrottleDelay);
-        // Slow down future inserts by 5%
-        insertInterval += (insertInterval / 20);
-        console.log(`Raising insert interval to ${insertInterval} ms`);
-        clearInterval(insertIntervalTimer);
-        insertIntervalTimer = setInterval(insertContacts, insertInterval);
+        batch.set(uuidv4(), JSON.stringify(contact));
     }
+    batch.exec((err, replies) => {
+        if (err) {
+            console.log('BATCH SET error handler');
+            console.log(err);
+        } else {
+            currentContacts += batchSize;
+        }
+    });
 }
 
 const updateConsole = () => {
-    console.log(`Inserting ${currentContacts} of ${numContactsToCreate}`);
+    let insertRate = (currentContacts - previousContacts) * 1000 / consoleUpdateRate; // per second
+    // Track how many times in a row we are increasing or decreasing rate
+    if(insertRate >= previousInsertRate && rateCounter < rateLimit) {
+        rateCounter++;
+    } else if(insertRate < previousInsertRate && rateCounter > -rateLimit) {
+        rateCounter--;
+    }
+    if(rateCounter === rateLimit) {
+        // Speed up since we have climbed consistently over the last rateLimit checks
+        batchSize = Math.round(batchSize * 1.01);
+        rateCounter=0; // Reset so we can see if this new change kaes a difference
+    } else if (rateCounter === -rateLimit) {
+        // Slow down since we have fallen consistently over the last rateLimit checks
+        batchSize = Math.round(batchSize / 1.01);
+        rateCounter=0; // Reset so we can see if this new change kaes a difference
+    }
+    previousContacts = currentContacts;
+    previousInsertRate = insertRate;
+    console.log(`${currentContacts}/${numContactsToCreate} - ${((insertRate+previousInsertRate)/2).toFixed()} per sec`);
 }
 
 function uuidv4() {
