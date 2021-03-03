@@ -3,7 +3,7 @@
 Setup Redis using either Docker Desktop (recommended), Azure Container Instance, or Kubernetes
     as documented in their respective setup folders
 
-    Recommend the RedisInsight client when requiring a GUI
+    Recommend the RedisInsight client when requiring a GUI to identify 2 keys, then insert them on line 39 below
 */
 const chalk = require('chalk');
 const faker = require('faker/locale/en_US');
@@ -36,7 +36,7 @@ client.on("error", (err) => {
 const main = async () => {
     // Determine how many contacts currently exist
     let startTime = new Date();
-    let contacts = [await getAsync('a0a31918-e38f-4c39-aa98-dcda3525fad5'), await getAsync('f323191b-dd63-4def-820d-daafcf3bfe30')];
+    let contacts = [await getAsync('57b7eabb-85d2-4dfb-9519-93191e2e758e'), await getAsync('e0e7cae4-5248-468f-84db-3192c7c29971')];
     let endTime = new Date();
     let elapsedTime = endTime - startTime;
     console.log(chalk.cyan(`Search for 2 specific contacts by their key`));

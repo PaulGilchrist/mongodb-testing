@@ -9,7 +9,7 @@ const mongoClient = require('mongodb').MongoClient;
 const util = require('util');
 
 // Configuration
-const environment = 'cosmosDbServerless' // mongoDb, cosmosDbProvisioned, or cosmosDbServerless
+const environment = 'mongoDbConnectionString' // mongoDb, cosmosDbProvisioned, or cosmosDbServerless
 
 // Global variables
 let client = null;
@@ -88,6 +88,7 @@ const dropCollection = async (db, collectionName) => {
 const initDatabase = async () => {
     try {
         // Create or connect to database
+        console.log(chalk.cyan(connectionString));
         client = await mongoClient.connect(connectionString, mongoClientOptions);
         db = client.db(dbName);
         // Create or connect to collection

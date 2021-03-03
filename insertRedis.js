@@ -129,7 +129,7 @@ const updateConsole = () => {
     }
     previousContacts = currentContacts;
     previousInsertRate = insertRate;
-    console.log(`${currentContacts}/${numContactsToCreate} - ${((insertRate+previousInsertRate)/2).toFixed()} per sec`);
+    console.log(`${currentContacts}/${numContactsToCreate} - ${insertRate.toFixed()} per sec`);
 }
 
 function uuidv4() {

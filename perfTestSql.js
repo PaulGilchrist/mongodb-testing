@@ -5,13 +5,16 @@ Make sure to setup the appropriate indexes before running this code
 CREATE INDEX idx_contacts_firstName on [dbo].[contacts] (firstName);
 CREATE INDEX idx_contacts_lastName on [dbo].[contacts] (lastName);
 CREATE INDEX idx_contacts_displayName on [dbo].[contacts] (displayName);
+CREATE INDEX idx_addresses_contactId on [dbo].[addresses] (contactId);
 CREATE INDEX idx_addresses_street on [dbo].[addresses] (street);
 CREATE INDEX idx_addresses_city on [dbo].[addresses] (city);
 CREATE INDEX idx_addresses_state on [dbo].[addresses] (state);
 CREATE INDEX idx_addresses_zip on [dbo].[addresses] (zip);
+CREATE INDEX idx_emails_contactId on [dbo].[emails] (contactId);
 CREATE INDEX idx_emails_email on [dbo].[emails] (email);
+CREATE INDEX idx_phones_contactId on [dbo].[phones] (contactId);
 CREATE INDEX idx_phones_phoneNumber on [dbo].[phones] (phoneNumber);
-
+EXEC sp_helpindex <tableName>
 */
 const chalk = require('chalk'); // Add color to the console
 const args = require('minimist')(process.argv.slice(2)); // Get arguments by name rather than by index
