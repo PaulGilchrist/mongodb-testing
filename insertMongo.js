@@ -9,10 +9,11 @@ const mongoClient = require('mongodb').MongoClient;
 const v8 = require('v8');
 
 // Configuration
-const environment = 'mongoDb'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
-let batchSize = 2000; // Recommend 500 for remote server
-let insertInterval = 1; // Recommend 150-250 for remote server
-const numContactsToCreate = 20000000;
+const databaseType = args['d'] || process.env.databaseType ||'mongoDb'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
+const numContactsToCreate = args['n'] || process.env.numContactsToCreate || 20000000;
+let batchSize = Math.min(numContactsToCreate, 2000); // Recommend 500 for remote server
+let insertInterval = 150; // Recommend 150-250 for remote server
+console.log(args['n']);
 
 // Global variables
 let client = null;
@@ -25,15 +26,15 @@ const mongoClientOptions = {
 };
 
 let connectionString = null;
-switch (environment) {
+switch (databaseType) {
     case 'cosmosDbProvisioned':
-        connectionString = args['cosmosDbProvisionedConnectionString'] || process.env.cosmosDbProvisionedConnectionString;
+        connectionString = args['c'] || process.env.cosmosDbProvisionedConnectionString;
         break;
     case 'cosmosDbServerless':
-        connectionString = args['cosmosDbServerlessConnectionString'] || process.env.cosmosDbServerlessConnectionString;
+        connectionString = args['c'] || process.env.cosmosDbServerlessConnectionString;
         break;
     default:
-        connectionString = args['mongoDbConnectionString'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/';
+        connectionString = args['c'] || process.env.mongoDbConnectionString || 'mongodb://localhost:27017/';
 }
 
 let consoleUpdateTimer = null;
