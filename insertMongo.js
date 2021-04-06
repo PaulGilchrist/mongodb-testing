@@ -10,10 +10,9 @@ const v8 = require('v8');
 
 // Configuration
 const databaseType = args['d'] || process.env.databaseType ||'mongoDb'// mongoDb, cosmosDbProvisioned, or cosmosDbServerless
-const numContactsToCreate = args['n'] || process.env.numContactsToCreate || 20000000;
+const numContactsToCreate = args['n'] || process.env.numContactsToCreate || 200; // Use 20 million if wanting to later do performance testing on the dataset
 let batchSize = Math.min(numContactsToCreate, 2000); // Recommend 500 for remote server
 let insertInterval = 150; // Recommend 150-250 for remote server
-console.log(args['n']);
 
 // Global variables
 let client = null;
@@ -22,8 +21,6 @@ let db = null;
 const dbName = 'mongotest';
 const mongoClientOptions = {
     connectTimeoutMS: 300000, // 5 min - May need to wait for the container to finish creation process and first time database setup
-    reconnectInterval: 5000,
-    reconnectTries: 60, // 60 retires at 5 second interval = 5 minutes
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
@@ -77,7 +74,6 @@ const main = async () => {
         console.log(err);
         process.exit(1);
     }
-    process.exit(0);
 }
 
 const close = () => {
@@ -85,7 +81,8 @@ const close = () => {
     clearInterval(insertIntervalTimer);
     clearInterval(throttleIntervalTimer);
     client.close();
-    console.log(`Currently inserted contacts = ${currentContacts}`);    
+    console.log(`Currently inserted contacts = ${currentContacts}`);  
+    process.exit(0);
 }
 
 const insertContacts = () => {
