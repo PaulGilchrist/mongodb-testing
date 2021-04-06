@@ -21,6 +21,9 @@ const collectionName = 'contacts';
 let db = null;
 const dbName = 'mongotest';
 const mongoClientOptions = {
+    connectTimeoutMS: 300000, // 5 min - May need to wait for the container to finish creation process and first time database setup
+    reconnectInterval: 5000,
+    reconnectTries: 60, // 60 retires at 5 second interval = 5 minutes
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
@@ -72,7 +75,9 @@ const main = async () => {
             client.close();
         }
         console.log(err);
+        process.exit(1);
     }
+    process.exit(0);
 }
 
 const close = () => {
