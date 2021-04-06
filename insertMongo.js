@@ -44,6 +44,8 @@ let throttleIntervalTimer = null
 let currentContacts = 0;
 
 let inErrorState = false;
+let retryCount = 0;
+let maxRetries = 10;
 let timeInErrorState = Date.now();
 
 const main = async () => {
@@ -71,8 +73,14 @@ const main = async () => {
         if(client) {
             client.close();
         }
-        console.log(err);
-        process.exit(1);
+        if(err.message.includes('ECONNREFUSED') && retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Retrying connection ${retryCount} of ${maxRetries}`);
+            main();
+        } else {
+            console.log(err);
+            process.exit(1);
+        }
     }
 }
 
