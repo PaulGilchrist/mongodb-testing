@@ -1,3 +1,7 @@
+#To add anything to this file after initial commit, also run this command "get rm --cahced <fileOrPathToIgnore>"
+#vscode
+.DS_Store
+
 #temp workarea
 temp
 
