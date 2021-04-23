@@ -89,7 +89,7 @@ const main = async () => {
     if (client) {
       client.close();
     }
-    if (err.message.includes("ECONNREFUSED") && retryCount < maxRetries) {
+    if (retryCount < maxRetries) {
       retryCount++;
       await sleep(Math.pow(retryCount,2)*1000); // Exponentially grow the amount of time we wait between retires
       console.log(`Retrying connection ${retryCount} of ${maxRetries}`);
