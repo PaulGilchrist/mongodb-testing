@@ -15,7 +15,7 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "faker": "^5.3.1",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "mongodb": "^3.6.2",
     "mssql": "^6.3.1",
     "redis": "^3.0.2"
