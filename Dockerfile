@@ -1,4 +1,4 @@
-# docker build --rm -f "Dockerfile" -t paulgilchrist/mongodb-insert:arm64 .
+# docker build --rm -f "Dockerfile" --platform linux/arm64 -t paulgilchrist/mongodb-insert:arm64 .
 # docker push paulgilchrist/mongodb-insert:arm64
 # docker build --rm -f "Dockerfile" --platform linux/amd64 -t paulgilchrist/mongodb-insert:amd64 .
 # docker push paulgilchrist/mongodb-insert:amd64
