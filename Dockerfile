@@ -1,8 +1,8 @@
-# docker build --rm -f "Dockerfile" --platform linux/arm64 -t paulgilchrist/mongodb-insert:arm64 .
+# docker build --rm -f "Dockerfile" --no-cache --platform linux/arm64 -t paulgilchrist/mongodb-insert:arm64 .
 # docker push paulgilchrist/mongodb-insert:arm64
-# docker build --rm -f "Dockerfile" --platform linux/amd64 -t paulgilchrist/mongodb-insert:amd64 .
+# docker build --rm -f "Dockerfile" --no-cache --platform linux/amd64 -t paulgilchrist/mongodb-insert:amd64 .
 # docker push paulgilchrist/mongodb-insert:amd64
-# docker manifest create paulgilchrist/mongodb-insert:latest paulgilchrist/mongodb-insert:arm64 paulgilchrist/mongodb-insert:amd64
+# docker manifest create paulgilchrist/mongodb-insert:latest --amend paulgilchrist/mongodb-insert:arm64 --amend paulgilchrist/mongodb-insert:amd64
 # docker manifest push paulgilchrist/mongodb-insert:latest
 FROM node:alpine
 LABEL author="Paul Gilchrist"

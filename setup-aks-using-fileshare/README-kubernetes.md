@@ -50,12 +50,13 @@ Since Azure file share does not allow mounting to `/data/db` since there are alr
 
 ### Connect to the container's console and setup admin and other user accounts
 ```
-kubectl exec -it mongodb-0 sh
+kubectl exec --namespace demo --stdin --tty database-0 -- /bin/bash
+
 mongo
 use admin
 db.createUser({
     user: "admin",
-    pwd: "password",
+    pwd: "mongodb-k8s-demo",
     roles: [
         { role: "userAdminAnyDatabase", db: "admin" },
         { role: "readWriteAnyDatabase", db: "admin" },
@@ -68,9 +69,11 @@ exit
 exit
 ```
 
+Change database.yaml to add command "--auth' and restart container
+
 ### Test from MongoDB Compass
 ```
-mongodb://admin:password@<dns for public IP>:27017/
+mongodb://admin:mongodb-k8s-demo@localhost:27017/
 ```
 
 ### Complete Removal Steps
